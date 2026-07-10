@@ -1,0 +1,8 @@
+{
+  "goal": "Modernize Python backend code from Flask to FastAPI",
+  "description": "Rewrites Flask route decorators and request variables to FastAPI routers",
+  "tasks": [
+    "read_flask_app",
+    "rewrite_fastapi_endpoints"
+  ]
+}

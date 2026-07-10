@@ -1,0 +1,8 @@
+{
+  "goal": "Run SQLite table migrations and schema updates",
+  "description": "Applies DDL schema scripts to update column counts, inserts dummy rows and checks counts",
+  "tasks": [
+    "run_ddl_migrations",
+    "verify_sqlite_columns"
+  ]
+}

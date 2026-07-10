@@ -1,0 +1,9 @@
+{
+  "goal": "Update packages imports and export classes",
+  "description": "Adjusts import statements across folders after modifying module structure",
+  "tasks": [
+    "find_imports",
+    "replace_import_paths",
+    "run_tests"
+  ]
+}

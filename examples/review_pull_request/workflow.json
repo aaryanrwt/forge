@@ -1,0 +1,8 @@
+{
+  "goal": "Analyze PR changes for code style guide compliance",
+  "description": "Compares git diff and inspects for compliance with styling parameters",
+  "tasks": [
+    "git_diff_main",
+    "verify_style_guide"
+  ]
+}

@@ -1,0 +1,151 @@
+################################################################################
+# Forge - Production .gitignore
+################################################################################
+
+#############################
+# Python
+#############################
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.dmypy.json
+.pytype/
+.coverage
+.coverage.*
+htmlcov/
+.cache/
+
+#############################
+# Virtual Environments
+#############################
+.venv/
+venv/
+ENV/
+env/
+
+#############################
+# Build
+#############################
+build/
+dist/
+*.egg-info/
+.eggs/
+
+#############################
+# SQLite
+#############################
+*.db
+*.sqlite
+*.sqlite3
+!packages/backend/migrations/*.sqlite
+
+#############################
+# Logs
+#############################
+logs/
+*.log
+
+#############################
+# Runtime
+#############################
+*.pid
+*.pid.lock
+
+#############################
+# Benchmarks & Telemetry
+#############################
+benchmarks/results/*
+!benchmarks/results/baseline.json
+benchmarks/*.json
+telemetry/
+executions/
+runtime/
+memory/
+
+#############################
+# Generated Reports
+#############################
+*.html
+*.prof
+
+#############################
+# Secrets
+#############################
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+#############################
+# IDE & Editors
+#############################
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+*.old
+*.orig
+
+#############################
+# OS System Files
+#############################
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+#############################
+# Node / Javascript
+#############################
+node_modules/
+.pnpm-store/
+.npm/
+.next/
+out/
+.turbo/
+coverage/
+
+#############################
+# Playwright
+#############################
+playwright-report/
+test-results/
+
+#############################
+# Docker
+#############################
+docker-data/
+
+#############################
+# Temporary
+#############################
+tmp/
+temp/
+
+#############################
+# Uploads
+#############################
+uploads/
+
+#############################
+# Local Plugins
+#############################
+plugins/local/
+
+#############################
+# GitHub
+#############################
+.github/CODEOWNERS.local

@@ -1,0 +1,8 @@
+{
+  "name": "sqlite-plugin",
+  "version": "1.0.0",
+  "description": "Community plugin for running sqlite tasks",
+  "author": "Forge Open Source Community",
+  "task_type": "custom-sqlite",
+  "entry_point": "plugin.py"
+}

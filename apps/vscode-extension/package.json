@@ -1,0 +1,57 @@
+{
+  "name": "forge-vscode",
+  "displayName": "Forge — AI Execution Layer",
+  "description": "Run AI-orchestrated goals from VS Code using Forge",
+  "version": "0.1.0",
+  "publisher": "forge-ai",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other", "AI"],
+  "keywords": ["forge", "ai", "automation", "execution"],
+  "activationEvents": [
+    "onCommand:forge.runGoal",
+    "onCommand:forge.showStatus",
+    "onCommand:forge.showLogs"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "forge.runGoal",
+        "title": "Forge: Run Goal",
+        "category": "Forge"
+      },
+      {
+        "command": "forge.showStatus",
+        "title": "Forge: Show Execution Status",
+        "category": "Forge"
+      },
+      {
+        "command": "forge.showLogs",
+        "title": "Forge: Show Execution Logs",
+        "category": "Forge"
+      }
+    ],
+    "configuration": {
+      "title": "Forge",
+      "properties": {
+        "forge.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "URL of the running Forge API server"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.4.0"
+  }
+}

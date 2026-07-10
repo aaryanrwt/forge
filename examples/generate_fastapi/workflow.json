@@ -1,0 +1,10 @@
+{
+  "goal": "Generate a new FastAPI CRUD service",
+  "description": "Generates router endpoints, initializes Pydantic request models, compiles and tests accessibility",
+  "tasks": [
+    "write_pydantic_models",
+    "write_routers",
+    "verify_compilation",
+    "test_http_get"
+  ]
+}

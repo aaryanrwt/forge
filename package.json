@@ -1,0 +1,21 @@
+{
+  "name": "forge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Forge: The AI Execution Layer",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "format": "turbo format",
+    "test": "turbo test"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=9"
+  }
+}

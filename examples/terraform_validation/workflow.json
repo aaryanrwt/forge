@@ -1,0 +1,8 @@
+{
+  "goal": "Run terraform validation and safety checks",
+  "description": "Executes terraform init and validate to check infrastructure syntax",
+  "tasks": [
+    "terraform_init",
+    "terraform_validate"
+  ]
+}

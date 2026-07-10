@@ -1,0 +1,10 @@
+{
+  "goal": "Detect syntax errors in python code and apply fix",
+  "description": "Scans workspace files, runs pytest, captures the syntax/assertion traceback, and applies code edit",
+  "tasks": [
+    "scan_files",
+    "run_tests",
+    "apply_code_edit",
+    "verify_zero_exit_code"
+  ]
+}

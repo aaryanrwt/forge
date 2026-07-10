@@ -1,0 +1,9 @@
+{
+  "goal": "Scan logs to trace system exceptions",
+  "description": "Parses error logs, extracts traceback strings and identifies failed execution keys",
+  "tasks": [
+    "read_logs",
+    "extract_traceback",
+    "write_incident_report"
+  ]
+}

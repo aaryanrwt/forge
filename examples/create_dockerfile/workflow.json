@@ -1,0 +1,9 @@
+{
+  "goal": "Build Dockerfile for application sandbox",
+  "description": "Analyzes dependencies, writes Dockerfile configuration, executes docker build and runs container check",
+  "tasks": [
+    "generate_dockerfile",
+    "docker_build",
+    "docker_run_smoke_test"
+  ]
+}

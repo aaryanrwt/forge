@@ -1,0 +1,8 @@
+{
+  "goal": "Migrate Django models to Pydantic and Tortoise ORM",
+  "description": "Transforms Django database fields into Pydantic models",
+  "tasks": [
+    "read_django_models",
+    "generate_pydantic_schemas"
+  ]
+}

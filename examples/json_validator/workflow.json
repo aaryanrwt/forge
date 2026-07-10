@@ -1,0 +1,8 @@
+{
+  "goal": "Validate JSON payloads against schema rules",
+  "description": "Checks structured JSON files against a schema payload",
+  "tasks": [
+    "read_json_payload",
+    "verify_json_schema"
+  ]
+}

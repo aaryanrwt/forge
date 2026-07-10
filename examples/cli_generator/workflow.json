@@ -1,0 +1,8 @@
+{
+  "goal": "Generate Typer CLI parameters for a script",
+  "description": "Scaffolds a CLI wrapper around an existing core function module",
+  "tasks": [
+    "generate_typer_cli",
+    "verify_cli_help_flag"
+  ]
+}

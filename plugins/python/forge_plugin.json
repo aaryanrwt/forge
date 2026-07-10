@@ -1,0 +1,8 @@
+{
+  "name": "python-plugin",
+  "version": "1.0.0",
+  "description": "Community plugin for running python tasks",
+  "author": "Forge Open Source Community",
+  "task_type": "custom-python",
+  "entry_point": "plugin.py"
+}

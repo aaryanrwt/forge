@@ -1,0 +1,12 @@
+{
+  "name": "@forge/dashboard",
+  "version": "0.1.0",
+  "description": "Forge Dashboard — ships in v1.1",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Dashboard ships in v1.1 — see docs/ROADMAP.md'",
+    "build": "echo 'Dashboard ships in v1.1'",
+    "lint": "echo 'Dashboard ships in v1.1'",
+    "test": "echo 'Dashboard ships in v1.1'"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "goal": "Auto-document package files inside README",
+  "description": "Inspects src/ class definitions and automatically writes a markdown guide",
+  "tasks": [
+    "read_source_files",
+    "generate_markdown_readme"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "github-plugin",
+  "version": "1.0.0",
+  "description": "Community plugin for running github tasks",
+  "author": "Forge Open Source Community",
+  "task_type": "custom-github",
+  "entry_point": "plugin.py"
+}

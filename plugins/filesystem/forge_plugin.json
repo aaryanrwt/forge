@@ -1,0 +1,8 @@
+{
+  "name": "filesystem-plugin",
+  "version": "1.0.0",
+  "description": "Community plugin for running filesystem tasks",
+  "author": "Forge Open Source Community",
+  "task_type": "custom-filesystem",
+  "entry_point": "plugin.py"
+}

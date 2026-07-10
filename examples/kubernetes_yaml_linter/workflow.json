@@ -1,0 +1,8 @@
+{
+  "goal": "Lints Kubernetes manifests for security metrics",
+  "description": "Runs checks on deployment manifests to ensure no runAsUser root properties",
+  "tasks": [
+    "read_k8s_yaml",
+    "verify_security_rules"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "goal": "Create unit tests to match target coverage",
+  "description": "Analyzes file definitions and generates missing pytest test files",
+  "tasks": [
+    "read_source_code",
+    "generate_pytest_unit_tests"
+  ]
+}

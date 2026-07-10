@@ -1,0 +1,9 @@
+{
+  "goal": "Clone repo, run status, checkout branch and commit changes",
+  "description": "Automates standard developer git version control operations",
+  "tasks": [
+    "git_clone",
+    "git_checkout_branch",
+    "git_commit_changes"
+  ]
+}

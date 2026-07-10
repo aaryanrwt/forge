@@ -1,0 +1,8 @@
+{
+  "goal": "Upgrade Python 3.8 typing to Python 3.11+",
+  "description": "Converts typing.List and typing.Dict to generic list and dict types",
+  "tasks": [
+    "scan_typing_syntax",
+    "convert_to_generic_types"
+  ]
+}

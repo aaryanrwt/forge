@@ -1,0 +1,8 @@
+{
+  "name": "shell-plugin",
+  "version": "1.0.0",
+  "description": "Community plugin for running shell tasks",
+  "author": "Forge Open Source Community",
+  "task_type": "custom-shell",
+  "entry_point": "plugin.py"
+}

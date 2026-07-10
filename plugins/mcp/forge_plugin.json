@@ -1,0 +1,8 @@
+{
+  "name": "mcp-plugin",
+  "version": "1.0.0",
+  "description": "Community plugin for running mcp tasks",
+  "author": "Forge Open Source Community",
+  "task_type": "custom-mcp",
+  "entry_point": "plugin.py"
+}

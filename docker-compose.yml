@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  forge-api:
+    build:
+      context: .
+      target: production
+    container_name: forge-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - forge_data:/app/data
+      - ${HOME}/.forge/plugins:/root/.forge/plugins:ro
+    environment:
+      FORGE_DB_URL: sqlite+aiosqlite:////app/data/forge.db
+      FORGE_LLM_PROVIDER: ${FORGE_LLM_PROVIDER:-ollama}
+      FORGE_OLLAMA_BASE_URL: ${FORGE_OLLAMA_BASE_URL:-http://ollama:11434}
+      FORGE_LLM_MODEL: ${FORGE_LLM_MODEL:-llama3.2}
+      FORGE_LOG_LEVEL: ${FORGE_LOG_LEVEL:-INFO}
+      FORGE_OPENAI_API_KEY: ${FORGE_OPENAI_API_KEY:-}
+      FORGE_ANTHROPIC_API_KEY: ${FORGE_ANTHROPIC_API_KEY:-}
+      FORGE_GEMINI_API_KEY: ${FORGE_GEMINI_API_KEY:-}
+    depends_on:
+      ollama:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: forge-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  forge_data:
+    driver: local
+  ollama_data:
+    driver: local
+
+networks:
+  default:
+    name: forge-network

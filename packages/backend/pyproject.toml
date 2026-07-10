@@ -1,0 +1,71 @@
+[project]
+name = "forge-backend"
+version = "1.0.0"
+description = "Forge: The AI Execution Layer - Backend"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Forge Team" },
+]
+dependencies = [
+    "fastapi>=0.104.1",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "sqlalchemy>=2.0.23",
+    "alembic>=1.13.0",
+    "typer>=0.9.0",
+    "rich>=13.7.0",
+    "python-multipart>=0.0.6",
+    "aiofiles>=23.2.1",
+    "httpx>=0.25.2",
+    "python-dotenv>=1.0.0",
+    "aiosqlite>=0.19.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.3",
+    "pytest-asyncio>=0.21.1",
+    "pytest-cov>=4.1.0",
+    "black>=23.11.0",
+    "isort>=5.12.0",
+    "mypy>=1.7.0",
+    "ruff>=0.1.7",
+    "pre-commit>=3.6.0",
+]
+
+[project.scripts]
+forge = "forge.cli.main:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.isort]
+profile = "black"
+line-length = 100
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "W", "I", "N", "UP"]
+ignore = ["E501"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/forge"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

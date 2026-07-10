@@ -1,0 +1,8 @@
+{
+  "goal": "Probe running API ports for security vulnerabilities",
+  "description": "Performs TCP scans on local ports to ensure no open admin endpoints",
+  "tasks": [
+    "scan_ports",
+    "verify_admin_restrictions"
+  ]
+}

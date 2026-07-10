@@ -1,0 +1,8 @@
+{
+  "goal": "Build GitHub Actions CI workflow script",
+  "description": "Creates a YAML script inside .github/workflows for automated lint/test execution",
+  "tasks": [
+    "generate_github_actions_yaml",
+    "verify_yaml_syntax"
+  ]
+}

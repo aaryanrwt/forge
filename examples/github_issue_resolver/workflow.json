@@ -1,0 +1,9 @@
+{
+  "goal": "Locate and resolve simple bug issues",
+  "description": "Reads issue text, scans related files, applies fix and verifies",
+  "tasks": [
+    "read_issue_body",
+    "scan_related_source",
+    "apply_code_edit"
+  ]
+}
