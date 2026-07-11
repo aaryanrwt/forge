@@ -1,15 +1,17 @@
 """Pytest fixtures for Forge testing."""
+
 from __future__ import annotations
 
 import asyncio
-from typing import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Generator
+from uuid import uuid4
+
 import pytest
 import pytest_asyncio
 
 from forge.core.config import ForgeSettings
 from forge.core.container import Container
-from forge.core.domain.models import Task, TaskStatus, TaskType, Execution
-from uuid import uuid4
+from forge.core.domain.models import Execution, Task, TaskStatus, TaskType
 
 
 @pytest.fixture(scope="session")

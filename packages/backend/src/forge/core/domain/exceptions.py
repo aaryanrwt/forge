@@ -4,9 +4,9 @@ All Forge-specific exceptions derive from ForgeError, enabling catch-all
 handling at the application boundary while preserving granular semantics
 throughout the lower layers.
 """
+
 from __future__ import annotations
 
-from typing import Optional
 from uuid import UUID
 
 
@@ -26,13 +26,13 @@ class VerificationError(ForgeError):
     """Raised when task verification setup is invalid."""
 
 
-class RetryBudgetExhausted(ForgeError):
+class RetryBudgetExhaustedError(ForgeError):
     """Raised when a task has exceeded its retry budget."""
 
     def __init__(
         self,
         message: str,
-        task_id: Optional[UUID] = None,
+        task_id: UUID | None = None,
         max_retries: int = 0,
     ) -> None:
         super().__init__(message)
@@ -40,7 +40,7 @@ class RetryBudgetExhausted(ForgeError):
         self.max_retries = max_retries
 
 
-class CircuitBreakerOpen(ForgeError):
+class CircuitBreakerOpenError(ForgeError):
     """Raised when a circuit breaker is open for an executor."""
 
     def __init__(
@@ -54,13 +54,13 @@ class CircuitBreakerOpen(ForgeError):
         self.failure_count = failure_count
 
 
-class InfiniteLoopDetected(ForgeError):
+class InfiniteLoopDetectedError(ForgeError):
     """Raised when an infinite retry loop is detected via cycle hash."""
 
     def __init__(
         self,
         message: str,
-        task_id: Optional[UUID] = None,
+        task_id: UUID | None = None,
         cycle_hash: str = "",
     ) -> None:
         super().__init__(message)

@@ -4,14 +4,15 @@ Every concrete implementation in the infrastructure and application layers
 must satisfy one of these interfaces. This keeps the domain pure and enables
 easy substitution for testing or alternative providers.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, AsyncIterator, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 from uuid import UUID
 
 from forge.core.domain.models import (
-    CircuitBreakerState,
     ContextSummary,
     Execution,
     LogEntry,
@@ -56,7 +57,7 @@ class IRetryController(ABC):
     """Decides whether and when to retry a failed Task."""
 
     @abstractmethod
-    async def decide(self, task: Task, error: Optional[str] = None) -> RetryDecision:
+    async def decide(self, task: Task, error: str | None = None) -> RetryDecision:
         """Return a RetryDecision given the current task state and optional error."""
 
 
@@ -68,20 +69,20 @@ class IMemoryRepository(ABC):
     async def save_execution(self, execution: Execution) -> None: ...
 
     @abstractmethod
-    async def get_execution(self, execution_id: UUID) -> Optional[Execution]: ...
+    async def get_execution(self, execution_id: UUID) -> Execution | None: ...
 
     @abstractmethod
-    async def list_executions(self, limit: int = 100) -> List[Execution]: ...
+    async def list_executions(self, limit: int = 100) -> list[Execution]: ...
 
     # ── Task ──────────────────────────────────────────────────────────────────
     @abstractmethod
     async def save_task(self, task: Task) -> None: ...
 
     @abstractmethod
-    async def get_task(self, task_id: UUID) -> Optional[Task]: ...
+    async def get_task(self, task_id: UUID) -> Task | None: ...
 
     @abstractmethod
-    async def get_tasks_by_execution(self, execution_id: UUID) -> List[Task]: ...
+    async def get_tasks_by_execution(self, execution_id: UUID) -> list[Task]: ...
 
     # ── Logs ──────────────────────────────────────────────────────────────────
     @abstractmethod
@@ -92,28 +93,26 @@ class IMemoryRepository(ABC):
         self,
         execution_id: UUID,
         limit: int = 100,
-        level: Optional[LogLevel] = None,
-    ) -> List[LogEntry]: ...
+        level: LogLevel | None = None,
+    ) -> list[LogEntry]: ...
 
     # ── Summaries ─────────────────────────────────────────────────────────────
     @abstractmethod
     async def save_summary(self, summary: ContextSummary) -> None: ...
 
     @abstractmethod
-    async def get_summary(self, execution_id: UUID) -> Optional[ContextSummary]: ...
+    async def get_summary(self, execution_id: UUID) -> ContextSummary | None: ...
 
     # ── Stats ─────────────────────────────────────────────────────────────────
     @abstractmethod
-    async def get_execution_stats(self, execution_id: UUID) -> Dict[str, Any]: ...
+    async def get_execution_stats(self, execution_id: UUID) -> dict[str, Any]: ...
 
 
 class IContextOptimizer(ABC):
     """Compresses conversation context to reduce LLM token usage."""
 
     @abstractmethod
-    async def optimize(
-        self, context: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]: ...
+    async def optimize(self, context: list[dict[str, Any]]) -> list[dict[str, Any]]: ...
 
     @abstractmethod
     def get_token_savings(self) -> int: ...
@@ -148,7 +147,7 @@ class ILLMProvider(ABC):
     @abstractmethod
     async def complete(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         max_tokens: int = 2048,
         temperature: float = 0.1,
     ) -> tuple[str, TokenUsage]:
@@ -159,7 +158,7 @@ class ILLMProvider(ABC):
         """Return True if the provider endpoint is reachable."""
 
 
-class IPlugin(ABC):
+class IPlugin(IExecutor, ABC):
     """Interface all Forge plugins must implement.
 
     Plugins are discovered from ``~/.forge/plugins/`` and registered with
@@ -203,4 +202,4 @@ class ILearningInterface(ABC):
     async def record_success(self, task: Task) -> None: ...
 
     @abstractmethod
-    async def get_suggestions(self, goal: str) -> List[Dict[str, Any]]: ...
+    async def get_suggestions(self, goal: str) -> list[dict[str, Any]]: ...

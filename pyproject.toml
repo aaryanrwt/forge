@@ -1,7 +1,7 @@
 [project]
 name = "forge-backend"
 version = "1.0.0"
-description = "Forge: The AI Execution Layer - Backend"
+description = "Forge: The AI Execution Layer"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
@@ -42,33 +42,5 @@ forge = "forge.cli.main:app"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.black]
-line-length = 100
-target-version = ['py311']
-
-[tool.isort]
-profile = "black"
-line-length = 100
-
-[tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-plugins = ["sqlalchemy.ext.mypy.plugin"]
-
-[tool.ruff]
-line-length = 100
-
-[tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "UP"]
-ignore = ["E501"]
-
 [tool.hatch.build.targets.wheel]
-packages = ["src/forge"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-asyncio_mode = "auto"
+packages = ["packages/backend/src/forge"]

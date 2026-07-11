@@ -3,59 +3,58 @@
 Assembles and configures all core engine services, adapters, and repositories
 at startup based on ForgeSettings.
 """
+
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
 
-from forge.core.config import ForgeSettings, get_settings
-from forge.core.domain.interfaces import ILLMProvider, IExecutor
-from forge.core.domain.exceptions import ConfigurationError
-
-# Planners
-from forge.application.services.planner import FallbackPlanner, RulePlanner, LLMPlanner
-
-# Executors
-from forge.application.services.executor import (
-    ExecutorService,
-    ShellExecutor,
-    PythonExecutor,
-    GitExecutor,
-    DockerExecutor,
-    MCPExecutor,
-    ModelExecutor,
-)
-
-# Verifiers
-from forge.application.services.verifier import (
-    CompositeVerifier,
-    TaskStatusVerifier,
-    ExitCodeVerifier,
-    FileExistsVerifier,
-    OutputPatternVerifier,
-)
-
-# Retry Controller
-from forge.application.services.retry_controller import CircuitBreakerRetryController
+# Orchestrator
+from forge.application.orchestrator import Orchestrator
 
 # Context Optimizer
 from forge.application.services.context_optimizer import RollingContextOptimizer
 
+# Executors
+from forge.application.services.executor import (
+    DockerExecutor,
+    ExecutorService,
+    GitExecutor,
+    MCPExecutor,
+    ModelExecutor,
+    PythonExecutor,
+    ShellExecutor,
+)
+
 # Memory
 from forge.application.services.memory_service import MemoryService
-from forge.infrastructure.repository.sqlite_repository import SQLiteMemoryRepository
+
+# Planners
+from forge.application.services.planner import FallbackPlanner, LLMPlanner, RulePlanner
+
+# Plugins
+from forge.application.services.plugin_manager import PluginManager
+
+# Retry Controller
+from forge.application.services.retry_controller import CircuitBreakerRetryController
+
+# Verifiers
+from forge.application.services.verifier import (
+    CompositeVerifier,
+    ExitCodeVerifier,
+    FileExistsVerifier,
+    OutputPatternVerifier,
+    TaskStatusVerifier,
+)
+from forge.core.config import ForgeSettings, get_settings
+from forge.core.domain.exceptions import ConfigurationError
+from forge.core.domain.interfaces import IExecutor, ILLMProvider, IPlanner
 
 # Event Bus
 from forge.infrastructure.event_bus.local_event_bus import LocalEventBus
 
 # LLM Providers
 from forge.infrastructure.llm.factory import create_llm_provider
-
-# Plugins
-from forge.application.services.plugin_manager import PluginManager
-
-# Orchestrator
-from forge.application.orchestrator import Orchestrator
+from forge.infrastructure.repository.sqlite_repository import SQLiteMemoryRepository
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +62,7 @@ logger = logging.getLogger(__name__)
 class Container:
     """Dependency Injection Container for wiring up all backend components."""
 
-    def __init__(self, settings: Optional[ForgeSettings] = None) -> None:
+    def __init__(self, settings: ForgeSettings | None = None) -> None:
         """Initialize and wire up all services and configurations.
 
         Args:
@@ -80,7 +79,7 @@ class Container:
         self.memory_service = MemoryService(self.memory_repo, self.context_optimizer)
 
         # ── 2. LLM Provider (with graceful offline fallback) ───────────────
-        self.llm_provider: Optional[ILLMProvider] = None
+        self.llm_provider: ILLMProvider | None = None
         try:
             self.llm_provider = create_llm_provider(self.settings)
             logger.info(
@@ -96,6 +95,7 @@ class Container:
             )
 
         # ── 3. Planner ──────────────────────────────────────────────────────
+        self.planner: IPlanner
         if self.settings.planner_type == "llm" and self.llm_provider:
             self.planner = LLMPlanner(self.llm_provider)
         elif self.settings.planner_type == "fallback" and self.llm_provider:
@@ -125,7 +125,7 @@ class Container:
         )
 
         # ── 6. Executors ────────────────────────────────────────────────────
-        executors: List[IExecutor] = [
+        executors: list[IExecutor] = [
             ShellExecutor(timeout=self.settings.shell_executor_timeout),
             PythonExecutor(timeout=self.settings.python_executor_timeout),
             GitExecutor(timeout=self.settings.git_executor_timeout),
@@ -156,10 +156,10 @@ class Container:
     async def initialize(self) -> None:
         """Run async startup sequence: migrate SQLite, discover plugins."""
         logger.info("Initializing Forge dependency container...")
-        
+
         # Initialize DB schemas
         await self.memory_repo.init_db()
-        
+
         # Discover and load plugins from ~/.forge/plugins/
         try:
             manifests = await self.plugin_manager.discover()
@@ -169,7 +169,7 @@ class Container:
                     # Register plugin as an additional executor in the executor service
                     self.executor_service.add_executor(plugin)
                     logger.info("Registered plugin executor: %s", manifest.name)
-        except Exception as exc:
+        except Exception:
             logger.exception("Plugin discovery encountered an error")
 
         logger.info("Forge dependency container initialized.")

@@ -1,14 +1,14 @@
 """Unit tests for the built-in executors (Shell, Python, Git, Docker, Model, MCP)."""
+
 from __future__ import annotations
 
-import asyncio
 from uuid import uuid4
+
 import pytest
 
 from forge.application.services.executor import (
-    ExecutorService,
-    GitExecutor,
     DockerExecutor,
+    GitExecutor,
     PythonExecutor,
     ShellExecutor,
 )
@@ -25,7 +25,7 @@ async def test_shell_executor_echo() -> None:
         task_type=TaskType.SHELL,
         inputs={"command": "echo hello_world"},
     )
-    
+
     res = await exec.execute(task)
     assert res.status == TaskStatus.COMPLETED
     assert "hello_world" in res.outputs["stdout"]
@@ -36,7 +36,7 @@ async def test_shell_executor_echo() -> None:
 async def test_shell_executor_timeout() -> None:
     # 1 second timeout
     exec = ShellExecutor(timeout=1)
-    
+
     # Run command that sleeps for 3 seconds using python
     cmd = 'python -c "import time; time.sleep(3)"'
     task = Task(
@@ -46,7 +46,7 @@ async def test_shell_executor_timeout() -> None:
         task_type=TaskType.SHELL,
         inputs={"command": cmd},
     )
-    
+
     res = await exec.execute(task)
     assert res.status == TaskStatus.FAILED
     assert "timed out" in res.error.lower()
@@ -62,7 +62,7 @@ async def test_python_executor_success() -> None:
         task_type=TaskType.PYTHON,
         inputs={"code": "x = 10\ny = 20\nresult = x + y\nprint('Done math')"},
     )
-    
+
     res = await exec.execute(task)
     assert res.status == TaskStatus.COMPLETED
     assert res.outputs["result"] == 30
@@ -72,7 +72,7 @@ async def test_python_executor_success() -> None:
 @pytest.mark.asyncio
 async def test_git_executor_blocked_operations() -> None:
     exec = GitExecutor()
-    
+
     # Try git push (which should be blocked)
     task_push = Task(
         execution_id=uuid4(),
@@ -91,7 +91,10 @@ async def test_git_executor_blocked_operations() -> None:
         name="Clone repo",
         description="",
         task_type=TaskType.GIT,
-        inputs={"operation": "clone", "repo_url": ""}, # empty URL fails command building but passes safety
+        inputs={
+            "operation": "clone",
+            "repo_url": "",
+        },  # empty URL fails command building but passes safety
     )
     res_clone = await exec.execute(task_clone)
     assert res_clone.status == TaskStatus.FAILED
@@ -101,7 +104,7 @@ async def test_git_executor_blocked_operations() -> None:
 @pytest.mark.asyncio
 async def test_docker_executor_blocked_operations() -> None:
     exec = DockerExecutor()
-    
+
     # Try docker push (blocked)
     task_push = Task(
         execution_id=uuid4(),

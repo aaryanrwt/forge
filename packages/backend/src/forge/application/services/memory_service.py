@@ -3,20 +3,20 @@
 Wires together the persistent memory repository and context optimizer to build
 context windows for LLMs and fetch logs/summaries/statistics.
 """
+
 from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
 from forge.core.domain.interfaces import IContextOptimizer, IMemoryRepository
 from forge.core.domain.models import (
     ContextSummary,
-    Execution,
     LogEntry,
     LogLevel,
-    Task,
     TaskStatus,
 )
 
@@ -49,8 +49,8 @@ class MemoryService:
         execution_id: UUID,
         message: str,
         level: LogLevel = LogLevel.INFO,
-        task_id: Optional[UUID] = None,
-        details: Optional[Dict[str, Any]] = None,
+        task_id: UUID | None = None,
+        details: dict[str, Any] | None = None,
     ) -> LogEntry:
         """Create, persist, and return a new structured LogEntry.
 
@@ -72,7 +72,7 @@ class MemoryService:
         logger.debug("[%s] Log saved: %s", level.value.upper(), message)
         return entry
 
-    async def get_execution_context(self, execution_id: UUID) -> List[Dict[str, Any]]:
+    async def get_execution_context(self, execution_id: UUID) -> list[dict[str, Any]]:
         """Build and optimize a history-based context array for an execution.
 
         Aggregates the goal description, past completed tasks (with their inputs/outputs),
@@ -85,7 +85,7 @@ class MemoryService:
             return []
 
         # Start with the main goal
-        context: List[Dict[str, Any]] = [
+        context: list[dict[str, Any]] = [
             {
                 "role": "system",
                 "content": (
@@ -131,14 +131,16 @@ class MemoryService:
         if "telemetry" not in execution.metadata:
             execution.metadata["telemetry"] = {"spans": [], "metrics": {}}
         telemetry = execution.metadata["telemetry"]
-        telemetry["spans"].append({
-            "span": "Optimizer",
-            "duration_ms": elapsed_opt,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        telemetry["spans"].append(
+            {
+                "span": "Optimizer",
+                "duration_ms": elapsed_opt,
+                "timestamp": datetime.now(UTC).isoformat(),
+            }
+        )
         metrics = telemetry["metrics"]
         metrics["optimizer_ms"] = metrics.get("optimizer_ms", 0.0) + elapsed_opt
-        
+
         # Save updated execution metadata containing optimizer trace
         await self.repository.save_execution(execution)
         return optimized_context
@@ -160,9 +162,7 @@ class MemoryService:
         total_tasks = len(tasks)
         completed = sum(1 for t in tasks if t.status == TaskStatus.COMPLETED)
         failed = sum(1 for t in tasks if t.status == TaskStatus.FAILED)
-        pending = sum(
-            1 for t in tasks if t.status in (TaskStatus.PENDING, TaskStatus.IN_PROGRESS)
-        )
+        pending = sum(1 for t in tasks if t.status in (TaskStatus.PENDING, TaskStatus.IN_PROGRESS))
 
         summary_lines = [
             f"Execution Summary for goal: '{execution.goal}'",
@@ -173,8 +173,16 @@ class MemoryService:
         if tasks:
             summary_lines.append("\nTasks:")
             for t in tasks:
-                status_char = "✓" if t.status == TaskStatus.COMPLETED else "✗" if t.status == TaskStatus.FAILED else "•"
-                summary_lines.append(f"  [{status_char}] {t.name} ({t.task_type.value}) -> {t.status.value}")
+                status_char = (
+                    "✓"
+                    if t.status == TaskStatus.COMPLETED
+                    else "✗"
+                    if t.status == TaskStatus.FAILED
+                    else "•"
+                )
+                summary_lines.append(
+                    f"  [{status_char}] {t.name} ({t.task_type.value}) -> {t.status.value}"
+                )
 
         summary_text = "\n".join(summary_lines)
 

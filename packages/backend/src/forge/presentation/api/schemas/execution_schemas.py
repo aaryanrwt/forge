@@ -1,22 +1,25 @@
 """Pydantic schemas for executions, tasks, and logs endpoints."""
+
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from forge.core.domain.models import TaskStatus, TaskType, LogLevel
+from forge.core.domain.models import LogLevel, TaskStatus, TaskType
 
 
 class CreateExecutionRequest(BaseModel):
     """Payload to start or plan a new goal execution."""
+
     goal: str = Field(..., description="The natural language goal/instruction to run.")
 
 
 class TaskResponse(BaseModel):
     """API representation of a Task."""
+
     id: UUID
     execution_id: UUID
     name: str
@@ -24,32 +27,33 @@ class TaskResponse(BaseModel):
     task_type: TaskType
     status: TaskStatus
     order_index: int
-    dependencies: List[UUID]
-    inputs: Dict[str, Any]
-    outputs: Dict[str, Any]
-    error: Optional[str] = None
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    dependencies: list[UUID]
+    inputs: dict[str, Any]
+    outputs: dict[str, Any]
+    error: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     retry_count: int
     max_retries: int
-    estimated_duration_seconds: Optional[int] = None
-    duration_seconds: Optional[float] = None
+    estimated_duration_seconds: int | None = None
+    duration_seconds: float | None = None
 
 
 class ExecutionResponse(BaseModel):
     """API representation of an Execution, including its tasks."""
+
     id: UUID
     goal: str
     status: TaskStatus
-    tasks: List[TaskResponse]
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    tasks: list[TaskResponse]
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     token_usage_prompt_tokens: int = Field(0, alias="prompt_tokens")
     token_usage_completion_tokens: int = Field(0, alias="completion_tokens")
     token_usage_total_tokens: int = Field(0, alias="total_tokens")
-    error: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    duration_seconds: Optional[float] = None
+    error: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    duration_seconds: float | None = None
     completed_task_count: int
     failed_task_count: int
 
@@ -102,16 +106,18 @@ class ExecutionResponse(BaseModel):
 
 class ExecutionListResponse(BaseModel):
     """Paginated or limited list of executions."""
-    executions: List[ExecutionResponse]
+
+    executions: list[ExecutionResponse]
     total_count: int
 
 
 class LogEntryResponse(BaseModel):
     """API representation of a structured execution log entry."""
+
     id: UUID
     execution_id: UUID
-    task_id: Optional[UUID] = None
+    task_id: UUID | None = None
     level: LogLevel
     message: str
-    details: Dict[str, Any]
+    details: dict[str, Any]
     timestamp: datetime

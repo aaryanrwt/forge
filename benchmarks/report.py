@@ -1,8 +1,8 @@
 """Benchmark report generator and performance regression comparison budget checker."""
+
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -26,29 +26,29 @@ def format_ms(val: float) -> str:
 def run_benchmarks_and_check() -> None:
     results_dir = Path("./benchmarks/results")
     results_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # 1. Run all benchmarks
     print("Running Planning Benchmark...")
     planning_ms = planning.run_benchmark()
-    
+
     print("Running Execution Benchmark...")
     execution_ms = execution.run_benchmark()
-    
+
     print("Running Memory (DB) Benchmark...")
     memory_ms = memory.run_benchmark()
-    
+
     print("Running Compression Benchmark...")
     compression_ms = compression.run_benchmark()
-    
+
     print("Running Verification Benchmark...")
     verification_ms = verification.run_benchmark()
-    
+
     print("Running Plugin Benchmark...")
     plugin_ms = plugin.run_benchmark()
-    
+
     print("Running API Benchmark...")
     api_ms = api.run_benchmark()
-    
+
     print("Running WebSocket Benchmark...")
     websocket_ms = websocket.run_benchmark()
 
@@ -72,20 +72,20 @@ def run_benchmarks_and_check() -> None:
         try:
             with open(baseline_file, "r") as f:
                 baseline = json.load(f)
-            
+
             print("\n==================================================")
             print("Performance Budget Baseline Comparison (Allowed Regression: 10%)")
             print("==================================================")
             for key, val in current_run.items():
                 base_val = baseline.get(key, val)
                 diff_pct = ((val - base_val) / base_val) * 100.0 if base_val > 0 else 0
-                
+
                 status_str = "PASSED"
                 # Reject only if regression is > 10% AND absolute change is > 3.0 ms (to ignore sub-millisecond jitter)
                 if diff_pct > 10.0 and (val - base_val) > 3.0:
                     status_str = "REGRESSED"
                     regressed = True
-                    
+
                 line = f"  {key:<18}: {format_ms(base_val):>10} -> {format_ms(val):>10} ({diff_pct:>+6.1f}%) [{status_str}]"
                 print(line)
                 comparison_logs.append(line)
@@ -161,7 +161,9 @@ def run_benchmarks_and_check() -> None:
 
     # If --compare-baseline is passed and we regressed, fail the build
     if "--compare-baseline" in sys.argv and regressed:
-        print("\n[bold red]Build Failed: Performance budget regression detected![/bold red]")
+        print(
+            "\n[bold red]Build Failed: Performance budget regression detected![/bold red]"
+        )
         sys.exit(1)
 
 

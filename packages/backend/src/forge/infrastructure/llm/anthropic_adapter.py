@@ -4,9 +4,8 @@ Calls the Anthropic Messages API.  System messages are extracted from the
 messages list and sent in the dedicated ``system`` field, as required by the
 Anthropic API specification.
 """
-from __future__ import annotations
 
-from typing import Dict, List
+from __future__ import annotations
 
 import httpx
 
@@ -53,7 +52,7 @@ class AnthropicAdapter(BaseLLMProvider):
 
     async def complete(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         max_tokens: int = 2048,
         temperature: float = 0.1,
     ) -> tuple[str, TokenUsage]:
@@ -74,7 +73,7 @@ class AnthropicAdapter(BaseLLMProvider):
             LLMProviderError: On HTTP or parsing errors.
         """
         system_content = ""
-        filtered_messages: List[Dict[str, str]] = []
+        filtered_messages: list[dict[str, str]] = []
         for msg in messages:
             if msg.get("role") == "system":
                 # Concatenate multiple system messages if present
@@ -86,7 +85,7 @@ class AnthropicAdapter(BaseLLMProvider):
             else:
                 filtered_messages.append(msg)
 
-        payload: Dict[str, object] = {
+        payload: dict[str, object] = {
             "model": self._model,
             "max_tokens": max_tokens,
             "temperature": temperature,
@@ -111,8 +110,7 @@ class AnthropicAdapter(BaseLLMProvider):
             return content, usage
         except httpx.HTTPStatusError as exc:
             raise LLMProviderError(
-                f"Anthropic API error {exc.response.status_code}: "
-                f"{exc.response.text[:200]}"
+                f"Anthropic API error {exc.response.status_code}: {exc.response.text[:200]}"
             ) from exc
         except Exception as exc:
             raise LLMProviderError(f"Anthropic unexpected error: {exc}") from exc
@@ -121,7 +119,7 @@ class AnthropicAdapter(BaseLLMProvider):
         """Return True if an Anthropic API key is configured."""
         return bool(self._api_key)
 
-    async def __aenter__(self) -> "AnthropicAdapter":
+    async def __aenter__(self) -> AnthropicAdapter:
         return self
 
     async def __aexit__(self, *args: object) -> None:

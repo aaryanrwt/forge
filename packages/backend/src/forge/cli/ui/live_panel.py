@@ -1,7 +1,7 @@
 """Rich live dashboard panel for monitoring executions in real time."""
+
 from __future__ import annotations
 
-from typing import List
 from rich.console import Group
 from rich.panel import Panel
 from rich.table import Table
@@ -13,7 +13,7 @@ from forge.core.domain.models import Task, TaskStatus
 def render_live_panel(
     goal: str,
     status: str,
-    tasks: List[Task],
+    tasks: list[Task],
     elapsed_seconds: float = 0.0,
 ) -> Panel:
     """Return a Panel containing a formatted status table of all tasks in the execution."""
@@ -46,7 +46,7 @@ def render_live_panel(
     sorted_tasks = sorted(tasks, key=lambda t: t.order_index)
     for task in sorted_tasks:
         task_color = status_colors.get(task.status.value, "white")
-        
+
         status_text = Text(task.status.value.upper(), style=task_color)
         if task.status == TaskStatus.IN_PROGRESS:
             status_text.append(" ↺", style="blink")

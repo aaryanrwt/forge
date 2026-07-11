@@ -1,4 +1,5 @@
 """Docker Plugin implementation for custom-docker tasks."""
+
 from __future__ import annotations
 
 from forge.core.domain.interfaces import IPlugin

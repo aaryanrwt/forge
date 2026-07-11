@@ -1,4 +1,5 @@
 """Execution loop dispatcher overhead benchmark."""
+
 from __future__ import annotations
 
 import asyncio
@@ -15,11 +16,13 @@ def run_benchmark() -> float:
         Average execution lookup & mapping latency in ms.
     """
     shell_executor = ShellExecutor()
+
     # Mock execute to make it an instant return
     async def instant_exec(task: Task) -> Task:
         task.status = TaskStatus.COMPLETED
         return task
-    shell_executor.execute = instant_exec
+
+    shell_executor.execute = instant_exec  # type: ignore[method-assign]
 
     service = ExecutorService([shell_executor])
     task = Task(
@@ -29,11 +32,11 @@ def run_benchmark() -> float:
         task_type=TaskType.SHELL,
         inputs={"command": "echo bench"},
     )
-    
+
     # Warmup
     for _ in range(5):
         _ = asyncio.run(service.execute(task))
-        
+
     start = time.perf_counter()
     iterations = 500
     for _ in range(iterations):

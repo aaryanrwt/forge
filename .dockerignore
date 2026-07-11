@@ -1,0 +1,44 @@
+# Ignore local virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Ignore node modules and frontend build caches
+node_modules/
+.next/
+out/
+.turbo/
+.pnpm-store/
+
+# Ignore python caches and test files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Ignore Git files and local docs
+.git/
+.github/
+docs/
+/README.md
+/LICENSE
+/CODE_OF_CONDUCT.md
+/CONTRIBUTING.md
+/SECURITY.md
+
+# Ignore local databases and configuration files
+*.db
+*.sqlite
+*.sqlite3
+.env
+.env.*
+
+# Ignore logs
+*.log
+logs/

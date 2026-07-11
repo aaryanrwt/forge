@@ -3,9 +3,8 @@
 Connects to a locally-running Ollama instance (default: http://localhost:11434)
 and calls the /api/chat endpoint using the chat completion protocol.
 """
-from __future__ import annotations
 
-from typing import Dict, List
+from __future__ import annotations
 
 import httpx
 
@@ -41,7 +40,7 @@ class OllamaAdapter(BaseLLMProvider):
 
     async def complete(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         max_tokens: int = 2048,
         temperature: float = 0.1,
     ) -> tuple[str, TokenUsage]:
@@ -98,7 +97,7 @@ class OllamaAdapter(BaseLLMProvider):
         except Exception:
             return False
 
-    async def __aenter__(self) -> "OllamaAdapter":
+    async def __aenter__(self) -> OllamaAdapter:
         return self
 
     async def __aexit__(self, *args: object) -> None:

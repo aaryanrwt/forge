@@ -1,4 +1,5 @@
 """Sqlite Plugin implementation for custom-sqlite tasks."""
+
 from __future__ import annotations
 
 from forge.core.domain.interfaces import IPlugin

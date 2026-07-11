@@ -1,12 +1,12 @@
 """Unit tests for task output verifiers."""
+
 from __future__ import annotations
 
-import os
 from uuid import uuid4
+
 import pytest
 
 from forge.application.services.verifier import (
-    CompositeVerifier,
     ExitCodeVerifier,
     FileExistsVerifier,
     OutputPatternVerifier,
@@ -18,8 +18,14 @@ from forge.core.domain.models import Task, TaskStatus, TaskType
 @pytest.mark.asyncio
 async def test_task_status_verifier() -> None:
     v = TaskStatusVerifier()
-    task = Task(execution_id=uuid4(), name="", description="", task_type=TaskType.SHELL, status=TaskStatus.COMPLETED)
-    
+    task = Task(
+        execution_id=uuid4(),
+        name="",
+        description="",
+        task_type=TaskType.SHELL,
+        status=TaskStatus.COMPLETED,
+    )
+
     res = await v.verify(task)
     assert res.success is True
 
@@ -31,7 +37,7 @@ async def test_task_status_verifier() -> None:
 @pytest.mark.asyncio
 async def test_exit_code_verifier() -> None:
     v = ExitCodeVerifier()
-    
+
     # 0 exit code = Success
     task_success = Task(
         execution_id=uuid4(),
@@ -58,10 +64,10 @@ async def test_exit_code_verifier() -> None:
 @pytest.mark.asyncio
 async def test_file_exists_verifier(tmp_path: object) -> None:  # type: ignore[override]
     v = FileExistsVerifier()
-    
+
     # Temp file to verify
     test_file = str(tmp_path / "output.txt")  # type: ignore[attr-defined]
-    
+
     task = Task(
         execution_id=uuid4(),
         name="",
@@ -77,7 +83,7 @@ async def test_file_exists_verifier(tmp_path: object) -> None:  # type: ignore[o
     # Create file
     with open(test_file, "w") as f:
         f.write("hello")
-        
+
     res = await v.verify(task)
     assert res.success is True
 
@@ -93,7 +99,7 @@ async def test_output_pattern_verifier() -> None:
         inputs={"expected_pattern": r"Database connected successfully"},
         outputs={"stdout": "Some logs...\nDatabase connected successfully\nServer started."},
     )
-    
+
     res = await v.verify(task)
     assert res.success is True
 

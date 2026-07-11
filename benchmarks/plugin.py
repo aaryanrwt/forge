@@ -1,4 +1,5 @@
 """Plugin manager benchmark."""
+
 from __future__ import annotations
 
 import time
@@ -15,11 +16,11 @@ def run_benchmark() -> float:
     """
     settings = ForgeSettings(plugins_dir=Path("./plugins"))
     pm = PluginManager(settings)
-    
+
     # Warmup
     for _ in range(5):
         _ = pm.list_plugins()
-        
+
     start = time.perf_counter()
     iterations = 500
     for _ in range(iterations):

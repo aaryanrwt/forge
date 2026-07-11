@@ -8,6 +8,7 @@ The high-level ``MCPClient`` wraps a transport and provides methods for the
 MCP handshake (initialize), tool discovery (list_tools), and tool invocation
 (call_tool).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -15,7 +16,7 @@ import json
 import logging
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import httpx
 from pydantic import BaseModel
@@ -30,9 +31,9 @@ class MCPServerConfig(BaseModel):
 
     name: str
     transport_type: str = "stdio"  # "stdio" | "http"
-    command: Optional[List[str]] = None   # for stdio transport
-    url: Optional[str] = None            # for http transport
-    env: Optional[Dict[str, str]] = None
+    command: list[str] | None = None  # for stdio transport
+    url: str | None = None  # for http transport
+    env: dict[str, str] | None = None
 
 
 class MCPTransport(ABC):
@@ -47,7 +48,7 @@ class MCPTransport(ABC):
         """Close the underlying connection cleanly."""
 
     @abstractmethod
-    async def send(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def send(self, request: dict[str, Any]) -> dict[str, Any]:
         """Send a JSON-RPC request and return the response dict."""
 
 
@@ -60,12 +61,12 @@ class StdioTransport(MCPTransport):
 
     def __init__(
         self,
-        command: List[str],
-        env: Optional[Dict[str, str]] = None,
+        command: list[str],
+        env: dict[str, str] | None = None,
     ) -> None:
         self._command = command
         self._env = env
-        self._proc: Optional[asyncio.subprocess.Process] = None
+        self._proc: asyncio.subprocess.Process | None = None
 
     async def connect(self) -> None:
         """Spawn the MCP server subprocess."""
@@ -85,12 +86,12 @@ class StdioTransport(MCPTransport):
             try:
                 self._proc.terminate()
                 await asyncio.wait_for(self._proc.wait(), timeout=5.0)
-            except (asyncio.TimeoutError, ProcessLookupError):
+            except (TimeoutError, ProcessLookupError):
                 self._proc.kill()
             finally:
                 self._proc = None
 
-    async def send(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def send(self, request: dict[str, Any]) -> dict[str, Any]:
         """Write a JSON-RPC request and read the single-line response.
 
         Raises:
@@ -109,7 +110,7 @@ class StdioTransport(MCPTransport):
                 self._proc.stdout.readline(),
                 timeout=30.0,
             )
-        except asyncio.TimeoutError as exc:
+        except TimeoutError as exc:
             raise MCPConnectionError("MCP server response timeout") from exc
 
         if not raw:
@@ -128,7 +129,7 @@ class HTTPTransport(MCPTransport):
     def __init__(self, url: str, timeout: float = 30.0) -> None:
         self._url = url
         self._timeout = timeout
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
     async def connect(self) -> None:
         """Create the underlying HTTP client."""
@@ -140,7 +141,7 @@ class HTTPTransport(MCPTransport):
             await self._client.aclose()
             self._client = None
 
-    async def send(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def send(self, request: dict[str, Any]) -> dict[str, Any]:
         """POST the JSON-RPC request and return the parsed response.
 
         Raises:
@@ -172,7 +173,7 @@ class MCPClient:
     """
 
     def __init__(self) -> None:
-        self._transport: Optional[MCPTransport] = None
+        self._transport: MCPTransport | None = None
         self._request_id: int = 0
         self._initialized: bool = False
 
@@ -183,10 +184,10 @@ class MCPClient:
     def _rpc(
         self,
         method: str,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Build a JSON-RPC 2.0 request dict."""
-        req: Dict[str, Any] = {
+        req: dict[str, Any] = {
             "jsonrpc": "2.0",
             "id": self._next_id(),
             "method": method,
@@ -207,7 +208,7 @@ class MCPClient:
             self._transport = None
             self._initialized = False
 
-    async def initialize(self) -> Dict[str, Any]:
+    async def initialize(self) -> dict[str, Any]:
         """Send the MCP initialize handshake.
 
         Must be called after ``connect()`` before any other methods.
@@ -239,7 +240,7 @@ class MCPClient:
         logger.debug("MCPClient initialized: %s", result.get("result", {}))
         return result.get("result", {})
 
-    async def list_tools(self) -> List[Dict[str, Any]]:
+    async def list_tools(self) -> list[dict[str, Any]]:
         """Return the list of tools exposed by the MCP server.
 
         Raises:
@@ -258,7 +259,7 @@ class MCPClient:
     async def call_tool(
         self,
         name: str,
-        arguments: Optional[Dict[str, Any]] = None,
+        arguments: dict[str, Any] | None = None,
     ) -> Any:
         """Invoke a named MCP tool and return its result content.
 
@@ -287,7 +288,7 @@ class MCPClient:
             )
         return result.get("result", {}).get("content")
 
-    async def __aenter__(self) -> "MCPClient":
+    async def __aenter__(self) -> MCPClient:
         return self
 
     async def __aexit__(self, *args: object) -> None:

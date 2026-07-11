@@ -1,4 +1,5 @@
 """Python Plugin implementation for custom-python tasks."""
+
 from __future__ import annotations
 
 from forge.core.domain.interfaces import IPlugin

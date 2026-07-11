@@ -3,9 +3,8 @@
 Supports the official OpenAI API and any OpenAI-compatible endpoint
 (e.g. Azure OpenAI, vLLM, LM Studio) via the ``base_url`` parameter.
 """
-from __future__ import annotations
 
-from typing import Dict, List
+from __future__ import annotations
 
 import httpx
 
@@ -50,7 +49,7 @@ class OpenAIAdapter(BaseLLMProvider):
 
     async def complete(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         max_tokens: int = 2048,
         temperature: float = 0.1,
     ) -> tuple[str, TokenUsage]:
@@ -89,8 +88,7 @@ class OpenAIAdapter(BaseLLMProvider):
             return content, usage
         except httpx.HTTPStatusError as exc:
             raise LLMProviderError(
-                f"OpenAI API error {exc.response.status_code}: "
-                f"{exc.response.text[:200]}"
+                f"OpenAI API error {exc.response.status_code}: {exc.response.text[:200]}"
             ) from exc
         except Exception as exc:
             raise LLMProviderError(f"OpenAI unexpected error: {exc}") from exc
@@ -99,7 +97,7 @@ class OpenAIAdapter(BaseLLMProvider):
         """Return True if an API key is configured."""
         return bool(self._api_key)
 
-    async def __aenter__(self) -> "OpenAIAdapter":
+    async def __aenter__(self) -> OpenAIAdapter:
         return self
 
     async def __aexit__(self, *args: object) -> None:

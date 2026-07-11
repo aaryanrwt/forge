@@ -1,4 +1,5 @@
 """Github Plugin implementation for custom-github tasks."""
+
 from __future__ import annotations
 
 from forge.core.domain.interfaces import IPlugin

@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-COPY packages/backend/pyproject.toml packages/backend/
+COPY packages/backend/pyproject.toml packages/backend/README.md packages/backend/
 COPY packages/backend/src/ packages/backend/src/
 
 RUN pip install --no-cache-dir --upgrade pip && \

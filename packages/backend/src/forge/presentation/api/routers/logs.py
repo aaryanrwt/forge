@@ -1,8 +1,9 @@
 """API router for execution logs endpoints."""
+
 from __future__ import annotations
 
-from typing import List, Optional
 from uuid import UUID
+
 from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from forge.core.container import Container
@@ -22,13 +23,13 @@ def _get_container(request: Request) -> Container:
     return container
 
 
-@router.get("/{execution_id}", response_model=List[LogEntryResponse])
+@router.get("/{execution_id}", response_model=list[LogEntryResponse])
 async def get_logs(
     execution_id: UUID,
     request: Request,
     limit: int = Query(default=100, ge=1, le=1000),
-    level: Optional[LogLevel] = None,
-) -> List[LogEntryResponse]:
+    level: LogLevel | None = None,
+) -> list[LogEntryResponse]:
     """Retrieve execution logs, optionally filtered by level and entry limit."""
     container = _get_container(request)
     logs = await container.memory_repo.get_logs(

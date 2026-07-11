@@ -1,8 +1,9 @@
 """API router for task endpoints."""
+
 from __future__ import annotations
 
-from typing import List
 from uuid import UUID
+
 from fastapi import APIRouter, HTTPException, Request, status
 
 from forge.core.container import Container
@@ -55,11 +56,11 @@ async def get_task(
     )
 
 
-@router.get("/execution/{execution_id}", response_model=List[TaskResponse])
+@router.get("/execution/{execution_id}", response_model=list[TaskResponse])
 async def get_tasks_by_execution(
     execution_id: UUID,
     request: Request,
-) -> List[TaskResponse]:
+) -> list[TaskResponse]:
     """Retrieve all tasks associated with a specific execution."""
     container = _get_container(request)
     tasks = await container.memory_repo.get_tasks_by_execution(execution_id)

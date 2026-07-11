@@ -3,6 +3,7 @@
 Coordinates planners, executors, verifiers, and retry controllers to execute a list
 of tasks sequentially. Publishes execution/task lifecycle events on the event bus.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -10,18 +11,25 @@ import logging
 import time
 from contextlib import contextmanager
 from datetime import datetime
-from typing import Optional, Set
 from uuid import UUID
 
 from forge.application.services.executor import ExecutorService
 from forge.application.services.memory_service import MemoryService
+from forge.core.domain.events import (
+    ExecutionCancelledEvent,
+    ExecutionCompletedEvent,
+    ExecutionCreatedEvent,
+    ExecutionResumedEvent,
+    ExecutionStartedEvent,
+    TaskCompletedEvent,
+    TaskCreatedEvent,
+    TaskFailedEvent,
+    TaskRetriedEvent,
+    TaskStartedEvent,
+    VerificationCompletedEvent,
+)
 from forge.core.domain.exceptions import (
-    CircuitBreakerOpen,
-    ExecutorError,
-    InfiniteLoopDetected,
     PlannerError,
-    RetryBudgetExhausted,
-    VerificationError,
 )
 from forge.core.domain.interfaces import (
     IContextOptimizer,
@@ -31,21 +39,7 @@ from forge.core.domain.interfaces import (
     IRetryController,
     IVerifier,
 )
-from forge.core.domain.models import Execution, Task, TaskStatus, TokenUsage, LogLevel
-from forge.core.domain.events import (
-    ExecutionCreatedEvent,
-    ExecutionStartedEvent,
-    ExecutionCompletedEvent,
-    ExecutionCancelledEvent,
-    ExecutionResumedEvent,
-    TaskCreatedEvent,
-    TaskStartedEvent,
-    TaskCompletedEvent,
-    TaskFailedEvent,
-    TaskRetriedEvent,
-    VerificationCompletedEvent,
-    LogEntryEvent,
-)
+from forge.core.domain.models import Execution, LogLevel, Task, TaskStatus, TokenUsage
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +56,7 @@ class Orchestrator:
         memory_repo: IMemoryRepository,
         event_bus: IEventBus,
         context_optimizer: IContextOptimizer,
-        memory_service: Optional[MemoryService] = None,
+        memory_service: MemoryService | None = None,
     ) -> None:
         self.planner = planner
         self.executor_service = executor_service
@@ -71,14 +65,14 @@ class Orchestrator:
         self.memory_repo = memory_repo
         self.event_bus = event_bus
         self.context_optimizer = context_optimizer
-        
+
         # If memory_service is not injected, create a default one
         if memory_service is None:
             self.memory_service = MemoryService(memory_repo, context_optimizer)
         else:
             self.memory_service = memory_service
 
-        self._cancelled_executions: Set[UUID] = set()
+        self._cancelled_executions: set[UUID] = set()
 
     @contextmanager
     def _trace(self, execution: Execution, span_name: str):
@@ -90,15 +84,19 @@ class Orchestrator:
     def _record_span(self, execution: Execution, span_name: str, duration_ms: float) -> None:
         if "telemetry" not in execution.metadata:
             execution.metadata["telemetry"] = {"spans": [], "metrics": {}}
-        
+
         telemetry = execution.metadata["telemetry"]
-        telemetry["spans"].append({
-            "span": span_name,
-            "duration_ms": duration_ms,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        telemetry["spans"].append(
+            {
+                "span": span_name,
+                "duration_ms": duration_ms,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
         metrics = telemetry["metrics"]
-        metrics[f"{span_name.lower()}_ms"] = metrics.get(f"{span_name.lower()}_ms", 0.0) + duration_ms
+        metrics[f"{span_name.lower()}_ms"] = (
+            metrics.get(f"{span_name.lower()}_ms", 0.0) + duration_ms
+        )
 
     async def run(self, goal: str) -> Execution:
         """Decompose a natural-language goal and execute the resulting plan.
@@ -107,7 +105,7 @@ class Orchestrator:
             goal: Natural language prompt or instruction.
         """
         logger.info("Starting orchestrator run for goal: %r", goal)
-        
+
         # 1. Plan
         start_plan = time.perf_counter()
         try:
@@ -195,7 +193,7 @@ class Orchestrator:
     async def _run_execution(self, execution: Execution) -> Execution:
         """Internal execution loop running tasks sequentially."""
         exec_id = execution.id
-        
+
         try:
             # Re-sort tasks by order index to ensure correct sequence
             sorted_tasks = sorted(execution.tasks, key=lambda t: t.order_index)

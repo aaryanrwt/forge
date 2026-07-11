@@ -1,9 +1,10 @@
 """Integration tests for the Typer CLI commands."""
+
 from __future__ import annotations
 
 import os
+
 from typer.testing import CliRunner
-import pytest
 
 from forge.cli.main import app
 
@@ -43,8 +44,11 @@ def test_cli_plugin_subcommands() -> None:
     # Scaffold plugin
     # Output to a temporary directory in workspace
     import tempfile
+
     with tempfile.TemporaryDirectory() as tmpdir:
-        res_create = runner.invoke(app, ["plugin", "create", "test-scaffold", "--output-dir", tmpdir])
+        res_create = runner.invoke(
+            app, ["plugin", "create", "test-scaffold", "--output-dir", tmpdir]
+        )
         assert res_create.exit_code == 0
         assert "Scaffolded plugin 'test-scaffold'" in res_create.stdout
         assert os.path.exists(os.path.join(tmpdir, "test-scaffold", "forge_plugin.json"))

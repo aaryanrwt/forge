@@ -4,10 +4,11 @@ All events are immutable Pydantic models derived from BaseEvent.  They are
 published by the Orchestrator and consumed by any subscriber (logging,
 WebSocket push, metrics, etc.).
 """
+
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
@@ -43,7 +44,7 @@ class ExecutionCompletedEvent(BaseEvent):
     execution_id: UUID
     success: bool
     token_usage: int = 0
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class ExecutionCancelledEvent(BaseEvent):
@@ -82,7 +83,7 @@ class TaskCompletedEvent(BaseEvent):
     task_id: UUID
     execution_id: UUID
     success: bool
-    outputs: Dict[str, Any] = Field(default_factory=dict)
+    outputs: dict[str, Any] = Field(default_factory=dict)
 
 
 class TaskFailedEvent(BaseEvent):
@@ -91,7 +92,7 @@ class TaskFailedEvent(BaseEvent):
     task_id: UUID
     execution_id: UUID
     error: str
-    retry_decision: Optional[Any] = None
+    retry_decision: Any | None = None
 
 
 class TaskRetriedEvent(BaseEvent):
@@ -112,7 +113,7 @@ class VerificationCompletedEvent(BaseEvent):
     task_id: UUID
     execution_id: UUID
     success: bool
-    details: Dict[str, Any] = Field(default_factory=dict)
+    details: dict[str, Any] = Field(default_factory=dict)
 
 
 # ── System Events ─────────────────────────────────────────────────────────────

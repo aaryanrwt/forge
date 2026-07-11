@@ -1,4 +1,5 @@
 """API router for config/settings management endpoint."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request, status

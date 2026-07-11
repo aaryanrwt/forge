@@ -1,7 +1,9 @@
 """Middleware to inject or propagate a correlation Request ID."""
+
 from __future__ import annotations
 
 import uuid
+
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
@@ -14,9 +16,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
     to both request state and response headers.
     """
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         request_id = request.headers.get("X-Request-ID")
         if not request_id:
             request_id = str(uuid.uuid4())

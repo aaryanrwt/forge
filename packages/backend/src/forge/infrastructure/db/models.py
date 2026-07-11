@@ -3,26 +3,26 @@
 Each ORM model maps 1-to-1 with a domain aggregate or value object.
 Conversion between ORM and domain models is handled in the repository layer.
 """
+
 from __future__ import annotations
 
 import uuid
+import uuid as _uuid_module
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import (
-    Column,
+    JSON,
     DateTime,
     ForeignKey,
     Index,
     Integer,
-    JSON,
     String,
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.sqlite import TEXT as SQLITE_TEXT
-from sqlalchemy.orm import DeclarativeBase, relationship
-from sqlalchemy.types import TypeDecorator, CHAR
-import uuid as _uuid_module
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.types import CHAR, TypeDecorator
 
 
 class UUIDType(TypeDecorator):  # type: ignore[type-arg]
@@ -56,16 +56,16 @@ class ExecutionModel(Base):
 
     __tablename__ = "executions"
 
-    id = Column(UUIDType, primary_key=True, default=uuid.uuid4)
-    goal = Column(Text, nullable=False)
-    status = Column(String(32), nullable=False, index=True)
-    started_at = Column(DateTime, nullable=True)
-    completed_at = Column(DateTime, nullable=True)
-    token_usage_json = Column(JSON, default=dict, nullable=False)
-    error = Column(Text, nullable=True)
-    metadata_json = Column(JSON, default=dict, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(
+    id: Mapped[uuid.UUID] = mapped_column(UUIDType, primary_key=True, default=uuid.uuid4)
+    goal: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    token_usage_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
@@ -105,23 +105,25 @@ class TaskModel(Base):
         Index("ix_tasks_order", "execution_id", "order_index"),
     )
 
-    id = Column(UUIDType, primary_key=True, default=uuid.uuid4)
-    execution_id = Column(UUIDType, ForeignKey("executions.id"), nullable=False)
-    name = Column(String(255), nullable=False)
-    description = Column(Text, nullable=False, default="")
-    task_type = Column(String(32), nullable=False)
-    status = Column(String(32), nullable=False)
-    order_index = Column(Integer, default=0, nullable=False)
-    dependencies = Column(JSON, default=list, nullable=False)
-    inputs = Column(JSON, default=dict, nullable=False)
-    outputs = Column(JSON, default=dict, nullable=False)
-    error = Column(Text, nullable=True)
-    started_at = Column(DateTime, nullable=True)
-    completed_at = Column(DateTime, nullable=True)
-    retry_count = Column(Integer, default=0, nullable=False)
-    max_retries = Column(Integer, default=3, nullable=False)
-    estimated_duration_seconds = Column(Integer, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(UUIDType, primary_key=True, default=uuid.uuid4)
+    execution_id: Mapped[uuid.UUID] = mapped_column(
+        UUIDType, ForeignKey("executions.id"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    task_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    order_index: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    dependencies: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    inputs: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    outputs: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    max_retries: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+    estimated_duration_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     execution = relationship("ExecutionModel", back_populates="tasks")
 
@@ -136,13 +138,15 @@ class LogEntryModel(Base):
         Index("ix_log_entries_timestamp", "timestamp"),
     )
 
-    id = Column(UUIDType, primary_key=True, default=uuid.uuid4)
-    execution_id = Column(UUIDType, ForeignKey("executions.id"), nullable=False)
-    task_id = Column(UUIDType, nullable=True)
-    level = Column(String(16), nullable=False, default="info")
-    message = Column(Text, nullable=False)
-    details_json = Column(JSON, default=dict, nullable=False)
-    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(UUIDType, primary_key=True, default=uuid.uuid4)
+    execution_id: Mapped[uuid.UUID] = mapped_column(
+        UUIDType, ForeignKey("executions.id"), nullable=False
+    )
+    task_id: Mapped[uuid.UUID | None] = mapped_column(UUIDType, nullable=True)
+    level: Mapped[str] = mapped_column(String(16), nullable=False, default="info")
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    details_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     execution = relationship("ExecutionModel", back_populates="logs")
 
@@ -151,15 +155,15 @@ class ContextSummaryModel(Base):
     """Persists a rolling context summary for an execution (one per execution)."""
 
     __tablename__ = "context_summaries"
-    __table_args__ = (
-        UniqueConstraint("execution_id", name="uq_context_summary_execution"),
-    )
+    __table_args__ = (UniqueConstraint("execution_id", name="uq_context_summary_execution"),)
 
-    id = Column(UUIDType, primary_key=True, default=uuid.uuid4)
-    execution_id = Column(UUIDType, ForeignKey("executions.id"), nullable=False)
-    summary = Column(Text, nullable=False, default="")
-    token_count = Column(Integer, default=0, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(UUIDType, primary_key=True, default=uuid.uuid4)
+    execution_id: Mapped[uuid.UUID] = mapped_column(
+        UUIDType, ForeignKey("executions.id"), nullable=False
+    )
+    summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    token_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     execution = relationship("ExecutionModel", back_populates="summary")

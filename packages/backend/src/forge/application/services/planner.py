@@ -7,12 +7,13 @@ wrapped in a new Execution.
 - ``LLMPlanner``: sends the goal to an LLM and parses the JSON task list.
 - ``FallbackPlanner``: tries LLMPlanner first, falls back to RulePlanner.
 """
+
 from __future__ import annotations
 
 import json
 import logging
 import re
-from typing import Any, Dict, List
+from typing import Any
 
 from forge.core.domain.exceptions import PlannerError
 from forge.core.domain.interfaces import ILLMProvider, IPlanner
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 # ── Keyword patterns for RulePlanner ─────────────────────────────────────────
 
-_RULE_MAP: List[tuple[re.Pattern[str], TaskType, str]] = [
+_RULE_MAP: list[tuple[re.Pattern[str], TaskType, str]] = [
     (re.compile(r"\b(run|execute|shell|bash|cmd)\b", re.I), TaskType.SHELL, "shell"),
     (re.compile(r"\b(python|py|script)\b", re.I), TaskType.PYTHON, "python"),
     (re.compile(r"\b(git|clone|commit|diff|status)\b", re.I), TaskType.GIT, "git"),
@@ -91,7 +92,7 @@ class RulePlanner(IPlanner):
                 return task_type
         return TaskType.SHELL  # default fallback
 
-    def _build_inputs(self, goal: str, task_type: TaskType) -> Dict[str, Any]:
+    def _build_inputs(self, goal: str, task_type: TaskType) -> dict[str, Any]:
         """Build a minimal inputs dict appropriate for *task_type*."""
         if task_type in (TaskType.SHELL, TaskType.CLI):
             return {"command": goal}
@@ -142,12 +143,10 @@ class LLMPlanner(IPlanner):
         if not execution.tasks:
             raise PlannerError("LLM returned an empty task list")
 
-        logger.info(
-            "LLMPlanner produced %d tasks for goal=%r", len(execution.tasks), goal[:60]
-        )
+        logger.info("LLMPlanner produced %d tasks for goal=%r", len(execution.tasks), goal[:60])
         return execution
 
-    def _parse_response(self, raw: str) -> List[Dict[str, Any]]:
+    def _parse_response(self, raw: str) -> list[dict[str, Any]]:
         """Extract a JSON array from the LLM response, stripping code fences."""
         cleaned = raw.strip()
         if cleaned.startswith("```"):
@@ -174,9 +173,7 @@ class LLMPlanner(IPlanner):
             )
         return parsed
 
-    def _dict_to_task(
-        self, execution_id: Any, td: Dict[str, Any], fallback_index: int
-    ) -> Task:
+    def _dict_to_task(self, execution_id: Any, td: dict[str, Any], fallback_index: int) -> Task:
         """Convert a raw task dict from the LLM into a Task domain object."""
         raw_type = td.get("task_type", "shell").lower()
         try:
@@ -211,9 +208,7 @@ class FallbackPlanner(IPlanner):
         try:
             return await self._llm_planner.plan(goal)
         except Exception as exc:
-            logger.warning(
-                "LLMPlanner failed (%s); falling back to RulePlanner", exc
-            )
+            logger.warning("LLMPlanner failed (%s); falling back to RulePlanner", exc)
             return await self._rule_planner.plan(goal)
 
 

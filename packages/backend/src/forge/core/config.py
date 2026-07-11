@@ -4,10 +4,11 @@ All settings are prefixed with FORGE_ and can be overridden via environment
 variables or a .env file in the working directory. A singleton accessor
 ``get_settings()`` is provided for dependency injection throughout the app.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List, Literal, Optional
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -37,7 +38,7 @@ class ForgeSettings(BaseSettings):
     host: str = Field(default="0.0.0.0", description="API server host")
     port: int = Field(default=8000, description="API server port")
     debug: bool = Field(default=False, description="Enable debug/reload mode")
-    cors_origins: List[str] = Field(default=["*"], description="Allowed CORS origins")
+    cors_origins: list[str] = Field(default=["*"], description="Allowed CORS origins")
 
     # ── LLM Provider ─────────────────────────────────────────────────────────
     llm_provider: Literal["ollama", "openai", "anthropic", "gemini"] = Field(
@@ -53,7 +54,7 @@ class ForgeSettings(BaseSettings):
     )
 
     # OpenAI (optional)
-    openai_api_key: Optional[str] = Field(default=None, description="OpenAI API key")
+    openai_api_key: str | None = Field(default=None, description="OpenAI API key")
     openai_model: str = Field(default="gpt-4o-mini", description="OpenAI model name")
     openai_base_url: str = Field(
         default="https://api.openai.com/v1",
@@ -61,14 +62,14 @@ class ForgeSettings(BaseSettings):
     )
 
     # Anthropic (optional)
-    anthropic_api_key: Optional[str] = Field(default=None, description="Anthropic API key")
+    anthropic_api_key: str | None = Field(default=None, description="Anthropic API key")
     anthropic_model: str = Field(
         default="claude-3-haiku-20240307",
         description="Anthropic model name",
     )
 
     # Gemini (optional)
-    gemini_api_key: Optional[str] = Field(default=None, description="Google Gemini API key")
+    gemini_api_key: str | None = Field(default=None, description="Google Gemini API key")
     gemini_model: str = Field(default="gemini-1.5-flash", description="Gemini model name")
 
     # ── Planner ──────────────────────────────────────────────────────────────
@@ -125,7 +126,7 @@ class ForgeSettings(BaseSettings):
     )
 
 
-_settings: Optional[ForgeSettings] = None
+_settings: ForgeSettings | None = None
 
 
 def get_settings() -> ForgeSettings:

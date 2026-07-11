@@ -1,16 +1,16 @@
 """API router for execution endpoints."""
+
 from __future__ import annotations
 
-import asyncio
-from typing import Any, Dict, List, Optional
 from uuid import UUID
+
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 
 from forge.core.container import Container
 from forge.presentation.api.schemas.execution_schemas import (
     CreateExecutionRequest,
-    ExecutionResponse,
     ExecutionListResponse,
+    ExecutionResponse,
 )
 
 router = APIRouter(prefix="/executions", tags=["executions"])
@@ -34,19 +34,19 @@ async def create_execution(
 ) -> ExecutionResponse:
     """Decompose a goal and launch execution in the background."""
     container = _get_container(request)
-    
+
     try:
         # Create plan (runs planner.plan)
         execution = await container.planner.plan(payload.goal)
         await container.memory_repo.save_execution(execution)
-        
+
         # Save each task to database
         for task in execution.tasks:
             await container.memory_repo.save_task(task)
 
         # Enqueue execution.orchestrator run in background
         background_tasks.add_task(container.orchestrator._run_execution, execution)
-        
+
         return ExecutionResponse.from_domain(execution)
     except Exception as exc:
         raise HTTPException(
@@ -87,7 +87,7 @@ async def get_execution(
 async def cancel_execution(
     execution_id: UUID,
     request: Request,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Request cancellation of an active execution run."""
     container = _get_container(request)
     execution = await container.memory_repo.get_execution(execution_id)
@@ -101,7 +101,9 @@ async def cancel_execution(
     return {"message": f"Cancellation request submitted for execution {execution_id}."}
 
 
-@router.post("/{execution_id}/resume", response_model=ExecutionResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/{execution_id}/resume", response_model=ExecutionResponse, status_code=status.HTTP_202_ACCEPTED
+)
 async def resume_execution(
     execution_id: UUID,
     background_tasks: BackgroundTasks,
@@ -118,7 +120,7 @@ async def resume_execution(
 
     # Launch resume sequence in background
     background_tasks.add_task(container.orchestrator.resume, execution_id)
-    
+
     # Reload and return updated execution details
     execution_updated = await container.memory_repo.get_execution(execution_id)
     return ExecutionResponse.from_domain(execution_updated or execution)

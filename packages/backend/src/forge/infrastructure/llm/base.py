@@ -3,10 +3,11 @@
 Provides shared utilities (JSON extraction from markdown-fenced responses)
 on top of the ILLMProvider abstract interface.
 """
+
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List
+from typing import Any
 
 from forge.core.domain.interfaces import ILLMProvider
 from forge.core.domain.models import TokenUsage
@@ -21,7 +22,7 @@ class BaseLLMProvider(ILLMProvider):
 
     async def complete_json(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         max_tokens: int = 2048,
     ) -> tuple[Any, TokenUsage]:
         """Call ``complete()`` and parse the response as JSON.

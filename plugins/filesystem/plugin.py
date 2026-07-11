@@ -1,4 +1,5 @@
 """Filesystem Plugin implementation for custom-filesystem tasks."""
+
 from __future__ import annotations
 
 from forge.core.domain.interfaces import IPlugin

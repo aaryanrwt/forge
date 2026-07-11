@@ -1,4 +1,5 @@
 """Shell Plugin implementation for custom-shell tasks."""
+
 from __future__ import annotations
 
 from forge.core.domain.interfaces import IPlugin

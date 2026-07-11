@@ -1,24 +1,26 @@
 """WebSocket router for streaming real-time execution events."""
+
 from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Dict, List
+from typing import Any
 from uuid import UUID
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from forge.core.container import Container
 from forge.core.domain.events import (
-    ExecutionStartedEvent,
-    ExecutionCompletedEvent,
     ExecutionCancelledEvent,
+    ExecutionCompletedEvent,
     ExecutionResumedEvent,
-    TaskStartedEvent,
+    ExecutionStartedEvent,
+    LogEntryEvent,
     TaskCompletedEvent,
     TaskFailedEvent,
     TaskRetriedEvent,
+    TaskStartedEvent,
     VerificationCompletedEvent,
-    LogEntryEvent,
 )
 
 logger = logging.getLogger("forge.api.websocket")
@@ -42,11 +44,14 @@ async def execution_events_ws(websocket: WebSocket, execution_id: UUID) -> None:
             event_exec_id = getattr(event, "execution_id", None)
             if event_exec_id == execution_id:
                 # Place event in the queue
-                await event_queue.put({
-                    "event_type": event.__class__.__name__,
-                    "timestamp": event.timestamp.isoformat(),
-                    "data": event.model_dump(mode="json"),
-                })
+                await event_queue.put(
+                    {
+                        "event_type": event.__class__.__name__,
+                        "timestamp": event.timestamp.isoformat(),
+                        "data": event.model_dump(mode="json"),
+                    }
+                )
+
         return handler
 
     # List of event types to monitor
@@ -94,7 +99,7 @@ async def execution_events_ws(websocket: WebSocket, execution_id: UUID) -> None:
     finally:
         # Cancel writer task
         writer_task.cancel()
-        
+
         # Unsubscribe handlers to avoid memory leak
         for et, h in handlers_map.items():
             try:

@@ -3,13 +3,13 @@
 Implements a retry decision system combining exponential backoff, error keyword
 classification, sliding-window circuit breakers, and infinite loop state detection.
 """
+
 from __future__ import annotations
 
 import hashlib
 import json
 import logging
 import time
-from typing import Dict, List, Optional
 from uuid import UUID
 
 from forge.core.domain.interfaces import IRetryController
@@ -33,9 +33,9 @@ class InfiniteLoopDetector:
     def __init__(self, threshold: int = 3) -> None:
         self.threshold = threshold
         # Maps execution_id -> dict of {hash -> count}
-        self._history: Dict[UUID, Dict[str, int]] = {}
+        self._history: dict[UUID, dict[str, int]] = {}
 
-    def _hash_state(self, task: Task, error: Optional[str]) -> str:
+    def _hash_state(self, task: Task, error: str | None) -> str:
         """Create a unique MD5 hash representing the task state and failure error."""
         inputs_serialized = ""
         try:
@@ -46,7 +46,7 @@ class InfiniteLoopDetector:
         raw = f"{task.name}:{inputs_serialized}:{error or ''}"
         return hashlib.md5(raw.encode("utf-8")).hexdigest()  # noqa: S324
 
-    def record_and_check(self, task: Task, error: Optional[str]) -> bool:
+    def record_and_check(self, task: Task, error: str | None) -> bool:
         """Record the current task failure and return True if a loop is detected."""
         cycle_hash = self._hash_state(task, error)
         exec_id = task.execution_id
@@ -87,9 +87,9 @@ class CircuitBreaker:
         self.name = name
         self.threshold = threshold
         self.timeout = timeout
-        
+
         self.state = CircuitBreakerState.CLOSED
-        self.failures: List[float] = []
+        self.failures: list[float] = []
         self.last_state_change = time.time()
 
     def record_failure(self) -> None:
@@ -129,7 +129,9 @@ class CircuitBreaker:
             if now - self.last_state_change >= self.timeout:
                 self.state = CircuitBreakerState.HALF_OPEN
                 self.last_state_change = now
-                logger.info("Circuit breaker '%s' transitioned to HALF-OPEN (testing recovery)", self.name)
+                logger.info(
+                    "Circuit breaker '%s' transitioned to HALF-OPEN (testing recovery)", self.name
+                )
                 return True
             return False
         return True
@@ -139,13 +141,29 @@ class CircuitBreakerRetryController(IRetryController):
     """Combines circuit breakers, loop detection, and exponential backoff."""
 
     TRANSIENT_KEYWORDS = [
-        "timeout", "connection", "rate limit", "429", "503", "temporary",
-        "busy", "service unavailable", "try again", "network",
+        "timeout",
+        "connection",
+        "rate limit",
+        "429",
+        "503",
+        "temporary",
+        "busy",
+        "service unavailable",
+        "try again",
+        "network",
     ]
 
     PERMANENT_KEYWORDS = [
-        "not found", "permission denied", "unauthorized", "401", "403", "404",
-        "syntaxerror", "validation error", "invalid argument", "bad request",
+        "not found",
+        "permission denied",
+        "unauthorized",
+        "401",
+        "403",
+        "404",
+        "syntaxerror",
+        "validation error",
+        "invalid argument",
+        "bad request",
     ]
 
     def __init__(
@@ -163,7 +181,7 @@ class CircuitBreakerRetryController(IRetryController):
         self.loop_detector = InfiniteLoopDetector()
         self._circuit_threshold = circuit_threshold
         self._circuit_timeout = circuit_timeout
-        self._circuits: Dict[str, CircuitBreaker] = {}
+        self._circuits: dict[str, CircuitBreaker] = {}
 
     def _get_circuit(self, task_type_value: str) -> CircuitBreaker:
         if task_type_value not in self._circuits:
@@ -174,7 +192,7 @@ class CircuitBreakerRetryController(IRetryController):
             )
         return self._circuits[task_type_value]
 
-    async def decide(self, task: Task, error: Optional[str] = None) -> RetryDecision:
+    async def decide(self, task: Task, error: str | None = None) -> RetryDecision:
         """Produce a RetryDecision based on the task, failure count, error, and circuit breakers."""
         # 1. Loop detection
         if self.loop_detector.record_and_check(task, error):
@@ -221,7 +239,7 @@ class CircuitBreakerRetryController(IRetryController):
 
         # 6. Exponential backoff calculation
         delay = min(
-            self.initial_delay * (self.backoff_factor ** task.retry_count),
+            self.initial_delay * (self.backoff_factor**task.retry_count),
             self.max_delay,
         )
 
@@ -237,7 +255,7 @@ class CircuitBreakerRetryController(IRetryController):
         circuit = self._get_circuit(task.task_type.value)
         circuit.record_success()
 
-    def _classify_error(self, error: Optional[str]) -> FailureType:
+    def _classify_error(self, error: str | None) -> FailureType:
         if not error:
             return FailureType.UNKNOWN
 

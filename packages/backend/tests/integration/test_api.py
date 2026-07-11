@@ -1,8 +1,9 @@
 """Integration tests for the FastAPI REST and WebSocket API endpoints."""
+
 from __future__ import annotations
 
 import asyncio
-from uuid import uuid4
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -24,10 +25,10 @@ def api_client() -> TestClient:
     container = Container(settings=settings)
     asyncio.run(container.initialize())
     app.state.container = container
-    
+
     client = TestClient(app)
     yield client
-    
+
     asyncio.run(container.close())
 
 
@@ -53,7 +54,7 @@ def test_api_executions_crud_and_websocket(api_client: TestClient) -> None:
     data = res_create.json()
     assert data["goal"] == "echo tests_passed"
     assert "id" in data
-    
+
     exec_id = data["id"]
 
     # 2. Get execution (GET /api/v1/executions/{id})
@@ -76,7 +77,7 @@ def test_api_executions_crud_and_websocket(api_client: TestClient) -> None:
     assert res_resume.status_code == 202
 
     # 6. WebSocket subscription check (GET /ws/executions/{id})
-    with api_client.websocket_connect(f"/ws/executions/{exec_id}") as websocket:
+    with api_client.websocket_connect(f"/ws/executions/{exec_id}"):
         # Send a keepalive ping message and receive event
         # (Since no events are fired instantly unless we trigger an orchestrator event,
         # we assert that the socket connected successfully and can be closed without errors)

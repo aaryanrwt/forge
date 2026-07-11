@@ -1,9 +1,10 @@
 """Main entrypoint for the Forge FastAPI application."""
+
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,7 +33,7 @@ logger = logging.getLogger("forge.api.main")
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Manages application startup and shutdown lifecycle hooks."""
     settings = get_settings()
-    
+
     # Configure logging level
     logging.basicConfig(level=settings.log_level)
     logging.getLogger("uvicorn.access").disabled = True  # We use our own access logging
@@ -40,12 +41,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Initializing dependency injection container...")
     container = Container(settings=settings)
     await container.initialize()
-    
+
     # Attach container to app state
     app.state.container = container
-    
+
     yield
-    
+
     logger.info("Closing dependency injection container...")
     await container.close()
 
@@ -100,6 +101,7 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
+
     settings = get_settings()
     uvicorn.run(
         "main:app",

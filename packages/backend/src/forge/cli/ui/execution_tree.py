@@ -1,15 +1,14 @@
 """Rich Tree renderer for displaying the task DAG in a visual tree format."""
+
 from __future__ import annotations
 
-from typing import List, Dict
-from uuid import UUID
-from rich.tree import Tree
 from rich.text import Text
+from rich.tree import Tree
 
 from forge.core.domain.models import Task, TaskStatus
 
 
-def render_execution_tree(tasks: List[Task], title: str = "Execution Plan") -> Tree:
+def render_execution_tree(tasks: list[Task], title: str = "Execution Plan") -> Tree:
     """Construct and return a Rich Tree visual showing the execution steps and statuses.
 
     Builds sequential/dependent visual tree nodes.
@@ -32,7 +31,7 @@ def render_execution_tree(tasks: List[Task], title: str = "Execution Plan") -> T
     for task in sorted_tasks:
         status_color = status_colors.get(task.status, "white")
         status_text = f"[{task.status.value.upper()}]"
-        
+
         node_text = Text()
         node_text.append(f"Step {task.order_index}: ", style="bold magenta")
         node_text.append(f"{task.name} ", style="white")
@@ -40,7 +39,7 @@ def render_execution_tree(tasks: List[Task], title: str = "Execution Plan") -> T
         node_text.append(status_text, style=status_color)
 
         node = root.add(node_text)
-        
+
         # If there are outputs/errors, add them as sub-nodes
         if task.status == TaskStatus.FAILED and task.error:
             node.add(f"[bold red]Error:[/bold red] {task.error}")

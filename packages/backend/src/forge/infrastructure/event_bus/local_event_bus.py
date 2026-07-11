@@ -5,11 +5,13 @@ The bus does NOT persist events; it is suitable for in-process pub/sub within
 a single Forge server process.  Swap for a Redis-backed bus in distributed
 deployments.
 """
+
 from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Callable, Dict, List, Set
+from collections.abc import Callable
+from typing import Any
 
 from forge.core.domain.interfaces import IEventBus
 
@@ -24,7 +26,7 @@ class LocalEventBus(IEventBus):
     """
 
     def __init__(self) -> None:
-        self._subscribers: Dict[type, List[Callable]] = {}
+        self._subscribers: dict[type, list[Callable]] = {}
 
     async def publish(self, event: Any) -> None:
         """Publish *event* to all registered handlers for its type.

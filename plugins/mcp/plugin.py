@@ -1,4 +1,5 @@
 """Mcp Plugin implementation for custom-mcp tasks."""
+
 from __future__ import annotations
 
 from forge.core.domain.interfaces import IPlugin

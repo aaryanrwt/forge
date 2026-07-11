@@ -1,19 +1,21 @@
 """Integration tests validating fault injection, chaos recovery, and loop resumption."""
+
 from __future__ import annotations
 
-import asyncio
-from uuid import uuid4
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+from uuid import uuid4
+
+import pytest
 
 from forge.application.orchestrator import Orchestrator
 from forge.core.domain.exceptions import (
-    ExecutorError,
-    VerificationError,
     PlannerError,
 )
-from forge.core.domain.models import Task, TaskStatus, TaskType, Execution
-from forge.core.domain.interfaces import IPlanner, IVerifier, IRetryController, IMemoryRepository, IEventBus, IContextOptimizer
+from forge.core.domain.interfaces import (
+    IMemoryRepository,
+    IPlanner,
+)
+from forge.core.domain.models import Execution, Task, TaskStatus, TaskType
 
 
 class FailingPlanner(IPlanner):
@@ -49,12 +51,12 @@ class MockMemoryRepository(IMemoryRepository):
         self.logs.append(entry)
 
     async def get_logs_by_execution(self, execution_id):
-        return [l for l in self.logs if l.execution_id == execution_id]
+        return [log for log in self.logs if log.execution_id == execution_id]
 
-    async def get_logs(self, execution_id, limit: int = 100, level = None):
-        res = [l for l in self.logs if l.execution_id == execution_id]
+    async def get_logs(self, execution_id, limit: int = 100, level=None):
+        res = [log for log in self.logs if log.execution_id == execution_id]
         if level:
-            res = [l for l in res if l.level == level]
+            res = [log for log in res if log.level == level]
         return res[:limit]
 
     async def save_summary(self, summary):
@@ -82,7 +84,7 @@ async def test_fault_injection_planner_crash() -> None:
     mock_repo = MockMemoryRepository()
     mock_bus = AsyncMock()
     mock_opt = AsyncMock()
-    
+
     orch = Orchestrator(
         planner=FailingPlanner(),
         executor_service=mock_executor,
@@ -92,7 +94,7 @@ async def test_fault_injection_planner_crash() -> None:
         event_bus=mock_bus,
         context_optimizer=mock_opt,
     )
-    
+
     with pytest.raises(PlannerError):
         await orch.run("test failure")
 
@@ -113,28 +115,28 @@ async def test_fault_injection_executor_exception_recovery() -> None:
                 task_type=TaskType.SHELL,
                 inputs={"command": "throw"},
             )
-        ]
+        ],
     )
-    
+
     mock_executor = AsyncMock()
     # Mock execute raising an error
     mock_executor.execute.side_effect = Exception("Subprocess crashed (SIGKILL)")
-    
+
     mock_verifier = AsyncMock()
     mock_verifier.verify.return_value.success = False
     mock_verifier.verify.return_value.message = "Failed due to subprocess crash"
-    
+
     # Retry decision: do not retry
     mock_retry = AsyncMock()
     mock_decision = MagicMock()
     mock_decision.should_retry = False
     mock_decision.reason = "Unrecoverable executor error"
     mock_retry.decide.return_value = mock_decision
-    
+
     mock_repo = MockMemoryRepository()
     mock_bus = AsyncMock()
     mock_opt = AsyncMock()
-    
+
     orch = Orchestrator(
         planner=mock_planner,
         executor_service=mock_executor,
@@ -144,7 +146,7 @@ async def test_fault_injection_executor_exception_recovery() -> None:
         event_bus=mock_bus,
         context_optimizer=mock_opt,
     )
-    
+
     # We expect run to finish with FAILED status without raising since exceptions inside tasks are handled gracefully
     res = await orch.run("Test goal")
     assert res.status == TaskStatus.FAILED

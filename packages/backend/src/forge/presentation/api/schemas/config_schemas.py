@@ -1,12 +1,15 @@
 """Pydantic schemas for config/settings management endpoint."""
+
 from __future__ import annotations
 
-from typing import List, Literal, Optional
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from pydantic import BaseModel
 
 
 class ConfigResponse(BaseModel):
     """Exposes current Forge server configurations."""
+
     db_url: str
     llm_provider: str
     llm_model: str
@@ -22,8 +25,9 @@ class ConfigResponse(BaseModel):
 
 class UpdateConfigRequest(BaseModel):
     """Allows runtime configuration changes (if supported by container/settings)."""
-    llm_provider: Optional[Literal["ollama", "openai", "anthropic", "gemini"]] = None
-    llm_model: Optional[str] = None
-    planner_type: Optional[Literal["rule", "llm", "fallback"]] = None
-    executor_timeout: Optional[int] = None
-    default_max_retries: Optional[int] = None
+
+    llm_provider: Literal["ollama", "openai", "anthropic", "gemini"] | None = None
+    llm_model: str | None = None
+    planner_type: Literal["rule", "llm", "fallback"] | None = None
+    executor_timeout: int | None = None
+    default_max_retries: int | None = None

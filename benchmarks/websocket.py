@@ -1,4 +1,5 @@
 """WebSocket messaging latency benchmark."""
+
 from __future__ import annotations
 
 import asyncio
@@ -22,21 +23,21 @@ def run_benchmark() -> float:
     container = Container(settings=settings)
     asyncio.run(container.initialize())
     app.state.container = container
-    
+
     client = TestClient(app)
     exec_id = uuid4()
-    
+
     # Warmup
     for _ in range(3):
         with client.websocket_connect(f"/ws/executions/{exec_id}"):
             pass
-            
+
     start = time.perf_counter()
     iterations = 20
     for _ in range(iterations):
         with client.websocket_connect(f"/ws/executions/{exec_id}"):
             pass
     elapsed = (time.perf_counter() - start) * 1000.0
-    
+
     asyncio.run(container.close())
     return elapsed / iterations

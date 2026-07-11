@@ -3,12 +3,13 @@
 Implements discrete check logic (ExitCode, FileExists, OutputPattern) and a
 `CompositeVerifier` that aggregates multiple verifiers.
 """
+
 from __future__ import annotations
 
 import logging
 import os
 import re
-from typing import Any, Dict, List
+
 from forge.core.domain.interfaces import IVerifier
 from forge.core.domain.models import Task, TaskStatus, VerificationResult
 
@@ -136,7 +137,7 @@ class CompositeVerifier(IVerifier):
     Fails at the first verifier that returns success=False.
     """
 
-    def __init__(self, verifiers: List[IVerifier]) -> None:
+    def __init__(self, verifiers: list[IVerifier]) -> None:
         """Initialize composite verifier.
 
         Args:

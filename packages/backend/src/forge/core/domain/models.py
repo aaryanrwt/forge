@@ -4,20 +4,20 @@ These models are the heart of the domain layer. They carry no infrastructure
 dependencies and are safe to use in any layer. All persistence mapping is
 done in the infrastructure layer.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from enum import StrEnum
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-
 # ── Enums ────────────────────────────────────────────────────────────────────
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(StrEnum):
     """Lifecycle states for a Task or Execution."""
 
     PENDING = "pending"
@@ -28,7 +28,7 @@ class TaskStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-class TaskType(str, Enum):
+class TaskType(StrEnum):
     """Supported executor kinds."""
 
     CLI = "cli"
@@ -40,7 +40,7 @@ class TaskType(str, Enum):
     MODEL = "model"
 
 
-class FailureType(str, Enum):
+class FailureType(StrEnum):
     """Classification of task failures, used by the retry controller."""
 
     TRANSIENT = "transient"
@@ -48,15 +48,15 @@ class FailureType(str, Enum):
     UNKNOWN = "unknown"
 
 
-class CircuitBreakerState(str, Enum):
+class CircuitBreakerState(StrEnum):
     """States for the circuit breaker pattern."""
 
-    CLOSED = "closed"       # Normal operation — calls pass through
-    OPEN = "open"           # Failing — calls are rejected immediately
+    CLOSED = "closed"  # Normal operation — calls pass through
+    OPEN = "open"  # Failing — calls are rejected immediately
     HALF_OPEN = "half_open"  # Recovery probe — one call allowed through
 
 
-class LogLevel(str, Enum):
+class LogLevel(StrEnum):
     """Structured log entry severity."""
 
     DEBUG = "debug"
@@ -76,7 +76,7 @@ class TokenUsage(BaseModel):
     total_tokens: int = 0
     cost_usd: float = 0.0
 
-    def add(self, other: "TokenUsage") -> "TokenUsage":
+    def add(self, other: TokenUsage) -> TokenUsage:
         """Return a new TokenUsage that is the sum of self and other."""
         return TokenUsage(
             prompt_tokens=self.prompt_tokens + other.prompt_tokens,
@@ -91,10 +91,10 @@ class LogEntry(BaseModel):
 
     id: UUID = Field(default_factory=uuid4)
     execution_id: UUID
-    task_id: Optional[UUID] = None
+    task_id: UUID | None = None
     level: LogLevel = LogLevel.INFO
     message: str
-    details: Dict[str, Any] = Field(default_factory=dict)
+    details: dict[str, Any] = Field(default_factory=dict)
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -114,7 +114,7 @@ class VerificationResult(BaseModel):
 
     success: bool
     message: str
-    details: Dict[str, Any] = Field(default_factory=dict)
+    details: dict[str, Any] = Field(default_factory=dict)
 
 
 class RetryDecision(BaseModel):
@@ -154,18 +154,18 @@ class Task(BaseModel):
     task_type: TaskType
     status: TaskStatus = TaskStatus.PENDING
     order_index: int = 0
-    dependencies: List[UUID] = Field(default_factory=list)
-    inputs: Dict[str, Any] = Field(default_factory=dict)
-    outputs: Dict[str, Any] = Field(default_factory=dict)
-    error: Optional[str] = None
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    dependencies: list[UUID] = Field(default_factory=list)
+    inputs: dict[str, Any] = Field(default_factory=dict)
+    outputs: dict[str, Any] = Field(default_factory=dict)
+    error: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     retry_count: int = 0
     max_retries: int = 3
-    estimated_duration_seconds: Optional[int] = None
+    estimated_duration_seconds: int | None = None
 
     @property
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Wall-clock duration if both timestamps are present."""
         if self.started_at and self.completed_at:
             return (self.completed_at - self.started_at).total_seconds()
@@ -182,15 +182,15 @@ class Execution(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     goal: str
     status: TaskStatus = TaskStatus.PENDING
-    tasks: List[Task] = Field(default_factory=list)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    tasks: list[Task] = Field(default_factory=list)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     token_usage: TokenUsage = Field(default_factory=TokenUsage)
-    error: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    error: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
     @property
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Wall-clock duration if both timestamps are present."""
         if self.started_at and self.completed_at:
             return (self.completed_at - self.started_at).total_seconds()

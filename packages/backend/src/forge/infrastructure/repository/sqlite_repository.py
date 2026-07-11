@@ -6,11 +6,12 @@ conversions happen here; the domain layer remains infrastructure-free.
 Implements the full IMemoryRepository contract including logs, summaries,
 and execution stats.
 """
+
 from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -123,9 +124,7 @@ class SQLiteMemoryRepository(IMemoryRepository):
         async with self._session_factory() as session:
             async with session.begin():
                 result = await session.execute(
-                    select(ExecutionModel).where(
-                        ExecutionModel.id == str(execution.id)
-                    )
+                    select(ExecutionModel).where(ExecutionModel.id == str(execution.id))
                 )
                 existing = result.scalar_one_or_none()
                 token_dict = execution.token_usage.model_dump()
@@ -152,13 +151,11 @@ class SQLiteMemoryRepository(IMemoryRepository):
                         )
                     )
 
-    async def get_execution(self, execution_id: UUID) -> Optional[Execution]:
+    async def get_execution(self, execution_id: UUID) -> Execution | None:
         """Return an Execution with its tasks, or None if not found."""
         async with self._session_factory() as session:
             result = await session.execute(
-                select(ExecutionModel).where(
-                    ExecutionModel.id == str(execution_id)
-                )
+                select(ExecutionModel).where(ExecutionModel.id == str(execution_id))
             )
             model = result.scalar_one_or_none()
             if model is None:
@@ -167,21 +164,17 @@ class SQLiteMemoryRepository(IMemoryRepository):
             domain.tasks = await self.get_tasks_by_execution(execution_id)
             return domain
 
-    async def list_executions(self, limit: int = 100) -> List[Execution]:
+    async def list_executions(self, limit: int = 100) -> list[Execution]:
         """Return the most recent *limit* executions (newest first)."""
         async with self._session_factory() as session:
             result = await session.execute(
-                select(ExecutionModel)
-                .order_by(ExecutionModel.created_at.desc())
-                .limit(limit)
+                select(ExecutionModel).order_by(ExecutionModel.created_at.desc()).limit(limit)
             )
             models = result.scalars().all()
-            executions: List[Execution] = []
+            executions: list[Execution] = []
             for m in models:
                 domain = self._execution_to_domain(m)
-                domain.tasks = await self.get_tasks_by_execution(
-                    UUID(str(m.id))
-                )
+                domain.tasks = await self.get_tasks_by_execution(UUID(str(m.id)))
                 executions.append(domain)
             return executions
 
@@ -232,16 +225,14 @@ class SQLiteMemoryRepository(IMemoryRepository):
                         )
                     )
 
-    async def get_task(self, task_id: UUID) -> Optional[Task]:
+    async def get_task(self, task_id: UUID) -> Task | None:
         """Return a single Task by ID, or None if not found."""
         async with self._session_factory() as session:
-            result = await session.execute(
-                select(TaskModel).where(TaskModel.id == str(task_id))
-            )
+            result = await session.execute(select(TaskModel).where(TaskModel.id == str(task_id)))
             model = result.scalar_one_or_none()
             return self._task_to_domain(model) if model else None
 
-    async def get_tasks_by_execution(self, execution_id: UUID) -> List[Task]:
+    async def get_tasks_by_execution(self, execution_id: UUID) -> list[Task]:
         """Return all tasks for an execution, ordered by order_index."""
         async with self._session_factory() as session:
             result = await session.execute(
@@ -273,8 +264,8 @@ class SQLiteMemoryRepository(IMemoryRepository):
         self,
         execution_id: UUID,
         limit: int = 100,
-        level: Optional[LogLevel] = None,
-    ) -> List[LogEntry]:
+        level: LogLevel | None = None,
+    ) -> list[LogEntry]:
         """Return log entries for an execution, newest first.
 
         Args:
@@ -323,7 +314,7 @@ class SQLiteMemoryRepository(IMemoryRepository):
                         )
                     )
 
-    async def get_summary(self, execution_id: UUID) -> Optional[ContextSummary]:
+    async def get_summary(self, execution_id: UUID) -> ContextSummary | None:
         """Return the context summary for an execution, or None."""
         async with self._session_factory() as session:
             result = await session.execute(
@@ -336,7 +327,7 @@ class SQLiteMemoryRepository(IMemoryRepository):
 
     # ── Stats ─────────────────────────────────────────────────────────────────
 
-    async def get_execution_stats(self, execution_id: UUID) -> Dict[str, Any]:
+    async def get_execution_stats(self, execution_id: UUID) -> dict[str, Any]:
         """Return aggregated statistics for a single execution.
 
         Returns a dict with keys: total_tasks, completed, failed, pending,
@@ -349,9 +340,7 @@ class SQLiteMemoryRepository(IMemoryRepository):
                 .where(TaskModel.execution_id == str(execution_id))
                 .group_by(TaskModel.status)
             )
-            status_counts: Dict[str, int] = {
-                row.status: row.cnt for row in count_result.all()
-            }
+            status_counts: dict[str, int] = {row.status: row.cnt for row in count_result.all()}
 
             # Retry totals
             retry_result = await session.execute(
@@ -368,11 +357,9 @@ class SQLiteMemoryRepository(IMemoryRepository):
                 )
             )
             exec_row = exec_result.first()
-            duration: Optional[float] = None
+            duration: float | None = None
             if exec_row and exec_row.started_at and exec_row.completed_at:
-                duration = (
-                    exec_row.completed_at - exec_row.started_at
-                ).total_seconds()
+                duration = (exec_row.completed_at - exec_row.started_at).total_seconds()
 
             total = sum(status_counts.values())
             return {

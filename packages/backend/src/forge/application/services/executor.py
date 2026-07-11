@@ -12,20 +12,17 @@ Executors in v1.0:
 - ``MCPExecutor``: delegates to an MCPClient tool call
 - ``ModelExecutor``: calls an LLM provider directly as a task
 """
+
 from __future__ import annotations
 
 import asyncio
 import logging
-import subprocess
-import sys
 from datetime import datetime
-from io import StringIO
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from forge.core.domain.exceptions import ExecutorError
 from forge.core.domain.interfaces import IExecutor, ILLMProvider
-from forge.core.domain.models import Task, TaskStatus, TaskType, TokenUsage
-from forge.infrastructure.mcp.mcp_client import MCPClient, StdioTransport
+from forge.core.domain.models import Task, TaskStatus, TaskType
+from forge.infrastructure.mcp.mcp_client import MCPClient, MCPTransport, StdioTransport
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +39,7 @@ def _mark_started(task: Task) -> None:
     task.started_at = _now()
 
 
-def _mark_completed(task: Task, outputs: Dict[str, Any]) -> None:
+def _mark_completed(task: Task, outputs: dict[str, Any]) -> None:
     task.status = TaskStatus.COMPLETED
     task.outputs = outputs
     task.completed_at = _now()
@@ -82,8 +79,8 @@ class ShellExecutor(IExecutor):
             _mark_failed(task, "No 'command' provided in task inputs")
             return task
 
-        cwd: Optional[str] = task.inputs.get("cwd")
-        env: Optional[Dict[str, str]] = task.inputs.get("env")
+        cwd: str | None = task.inputs.get("cwd")
+        env: dict[str, str] | None = task.inputs.get("env")
 
         try:
             proc = await asyncio.create_subprocess_shell(
@@ -110,7 +107,7 @@ class ShellExecutor(IExecutor):
                     task,
                     f"Command exited with code {proc.returncode}: {stderr or stdout}",
                 )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _mark_failed(task, f"Command timed out after {self._timeout}s: {command}")
         except Exception as exc:
             _mark_failed(task, str(exc))
@@ -155,26 +152,24 @@ class PythonExecutor(IExecutor):
 
         try:
             result = await asyncio.wait_for(
-                asyncio.get_event_loop().run_in_executor(
-                    None, self._run_code, code
-                ),
+                asyncio.get_event_loop().run_in_executor(None, self._run_code, code),
                 timeout=self._timeout,
             )
             _mark_completed(task, result)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _mark_failed(task, f"Python execution timed out after {self._timeout}s")
         except Exception as exc:
             _mark_failed(task, str(exc))
 
         return task
 
-    def _run_code(self, code: str) -> Dict[str, Any]:
+    def _run_code(self, code: str) -> dict[str, Any]:
         """Execute *code* in a fresh namespace and capture stdout."""
-        import io
         import contextlib
+        import io
 
         buf = io.StringIO()
-        namespace: Dict[str, Any] = {}
+        namespace: dict[str, Any] = {}
         with contextlib.redirect_stdout(buf):
             exec(compile(code, "<forge>", "exec"), namespace)  # noqa: S102
         return {
@@ -226,7 +221,7 @@ class GitExecutor(IExecutor):
             _mark_failed(task, f"Could not build git command for operation '{operation}'")
             return task
 
-        cwd: Optional[str] = task.inputs.get("path")
+        cwd: str | None = task.inputs.get("path")
         try:
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
@@ -247,7 +242,7 @@ class GitExecutor(IExecutor):
                 )
             else:
                 _mark_failed(task, f"git {operation} failed: {stderr or stdout}")
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _mark_failed(task, f"git {operation} timed out after {self._timeout}s")
         except FileNotFoundError:
             _mark_failed(task, "git executable not found. Install git and ensure it is on PATH.")
@@ -256,9 +251,7 @@ class GitExecutor(IExecutor):
 
         return task
 
-    def _build_command(
-        self, operation: str, inputs: Dict[str, Any]
-    ) -> Optional[List[str]]:
+    def _build_command(self, operation: str, inputs: dict[str, Any]) -> list[str] | None:
         """Build the git argv list for the requested operation."""
         if operation == "clone":
             repo_url = inputs.get("repo_url", "")
@@ -272,7 +265,7 @@ class GitExecutor(IExecutor):
             return ["git", "status", "--short"]
         if operation == "diff":
             args = ["git", "diff"]
-            if cached := inputs.get("cached"):
+            if inputs.get("cached"):
                 args.append("--cached")
             return args
         if operation == "commit":
@@ -340,7 +333,7 @@ class DockerExecutor(IExecutor):
                 )
             else:
                 _mark_failed(task, f"docker {operation} failed: {stderr or stdout}")
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _mark_failed(task, f"docker {operation} timed out after {self._timeout}s")
         except FileNotFoundError:
             _mark_failed(
@@ -351,10 +344,8 @@ class DockerExecutor(IExecutor):
 
         return task
 
-    def _build_command(
-        self, operation: str, inputs: Dict[str, Any]
-    ) -> List[str]:
-        extra_args: List[str] = inputs.get("args", [])
+    def _build_command(self, operation: str, inputs: dict[str, Any]) -> list[str]:
+        extra_args: list[str] = inputs.get("args", [])
         if operation == "build":
             image = inputs.get("image", "forge-image")
             context = inputs.get("context", ".")
@@ -401,11 +392,13 @@ class MCPExecutor(IExecutor):
 
         try:
             client = MCPClient()
+            transport: MCPTransport
             if mcp_url := task.inputs.get("mcp_url"):
                 from forge.infrastructure.mcp.mcp_client import HTTPTransport
+
                 transport = HTTPTransport(mcp_url)
             else:
-                mcp_command: List[str] = task.inputs.get("mcp_command", [])
+                mcp_command: list[str] = task.inputs.get("mcp_command", [])
                 if not mcp_command:
                     _mark_failed(task, "Either 'mcp_command' or 'mcp_url' must be provided")
                     return task
@@ -414,9 +407,7 @@ class MCPExecutor(IExecutor):
             async with client:
                 await client.connect(transport)
                 await client.initialize()
-                content = await client.call_tool(
-                    tool_name, task.inputs.get("tool_args", {})
-                )
+                content = await client.call_tool(tool_name, task.inputs.get("tool_args", {}))
             _mark_completed(task, {"content": content})
         except Exception as exc:
             _mark_failed(task, str(exc))
@@ -454,7 +445,7 @@ class ModelExecutor(IExecutor):
             _mark_failed(task, "No 'prompt' provided in task inputs")
             return task
 
-        messages: List[Dict[str, str]] = []
+        messages: list[dict[str, str]] = []
         if system := task.inputs.get("system"):
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
@@ -487,7 +478,7 @@ class ExecutorService:
     If no executor supports a given task type, the task is marked FAILED.
     """
 
-    def __init__(self, executors: List[IExecutor]) -> None:
+    def __init__(self, executors: list[IExecutor]) -> None:
         self._executors = executors
 
     def add_executor(self, executor: IExecutor) -> None:

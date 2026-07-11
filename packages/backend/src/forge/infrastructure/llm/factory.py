@@ -4,6 +4,7 @@ Reads the ``llm_provider`` field from ForgeSettings and constructs the
 appropriate adapter.  Raises ``ConfigurationError`` for unknown providers or
 missing required API keys.
 """
+
 from __future__ import annotations
 
 from forge.core.domain.exceptions import ConfigurationError

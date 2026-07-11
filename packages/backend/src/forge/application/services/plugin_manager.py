@@ -3,17 +3,15 @@
 Scans the plugins directory, loads JSON manifests, dynamically imports the entrypoint,
 and registers plugins into the execution environment.
 """
+
 from __future__ import annotations
 
 import importlib.util
 import json
 import logging
-import os
 import shutil
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from uuid import UUID
 
 from forge.core.config import ForgeSettings
 from forge.core.domain.exceptions import PluginError
@@ -37,10 +35,10 @@ class PluginManager:
             settings: ForgeSettings settings instance containing the plugins directory.
         """
         self.plugins_dir = Path(settings.plugins_dir)
-        self._loaded_plugins: Dict[str, IPlugin] = {}
-        self._manifests: Dict[str, PluginManifest] = {}
+        self._loaded_plugins: dict[str, IPlugin] = {}
+        self._manifests: dict[str, PluginManifest] = {}
 
-    async def discover(self) -> List[PluginManifest]:
+    async def discover(self) -> list[PluginManifest]:
         """Scan the plugins directory and load all valid plugins.
 
         Returns a list of manifests for successfully loaded plugins.
@@ -48,7 +46,7 @@ class PluginManager:
         # Ensure plugins directory exists
         self.plugins_dir.mkdir(parents=True, exist_ok=True)
 
-        loaded_manifests: List[PluginManifest] = []
+        loaded_manifests: list[PluginManifest] = []
         self._loaded_plugins.clear()
         self._manifests.clear()
 
@@ -58,13 +56,15 @@ class PluginManager:
 
             manifest_path = plugin_subdir / "forge_plugin.json"
             if not manifest_path.exists():
-                logger.warning("Directory '%s' has no forge_plugin.json manifest", plugin_subdir.name)
+                logger.warning(
+                    "Directory '%s' has no forge_plugin.json manifest", plugin_subdir.name
+                )
                 continue
 
             try:
                 manifest = self._load_manifest(manifest_path)
                 plugin_instance = self._load_plugin(plugin_subdir, manifest)
-                
+
                 self._loaded_plugins[manifest.name] = plugin_instance
                 self._manifests[manifest.name] = manifest
                 loaded_manifests.append(manifest)
@@ -77,7 +77,7 @@ class PluginManager:
     def _load_manifest(self, path: Path) -> PluginManifest:
         """Read and parse the JSON manifest file."""
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 data = json.load(f)
             return PluginManifest(**data)
         except Exception as exc:
@@ -122,17 +122,15 @@ class PluginManager:
         except Exception as exc:
             raise PluginError(f"Error loading python entrypoint: {exc}") from exc
 
-    def get_plugin(self, name: str) -> Optional[IPlugin]:
+    def get_plugin(self, name: str) -> IPlugin | None:
         """Retrieve a loaded plugin by its name."""
         return self._loaded_plugins.get(name)
 
-    def get_plugins_for_type(self, task_type: TaskType) -> List[IPlugin]:
+    def get_plugins_for_type(self, task_type: TaskType) -> list[IPlugin]:
         """Get all loaded plugins that claim support for *task_type*."""
-        return [
-            p for p in self._loaded_plugins.values() if p.supports(task_type)
-        ]
+        return [p for p in self._loaded_plugins.values() if p.supports(task_type)]
 
-    def list_plugins(self) -> List[PluginManifest]:
+    def list_plugins(self) -> list[PluginManifest]:
         """Return the manifests of all loaded plugins."""
         return list(self._manifests.values())
 

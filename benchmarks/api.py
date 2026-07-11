@@ -1,4 +1,5 @@
 """API endpoint overhead benchmark."""
+
 from __future__ import annotations
 
 import asyncio
@@ -21,18 +22,18 @@ def run_benchmark() -> float:
     container = Container(settings=settings)
     asyncio.run(container.initialize())
     app.state.container = container
-    
+
     client = TestClient(app)
-    
+
     # Warmup
     for _ in range(5):
         _ = client.get("/health")
-        
+
     start = time.perf_counter()
     iterations = 100
     for _ in range(iterations):
         _ = client.get("/health")
     elapsed = (time.perf_counter() - start) * 1000.0
-    
+
     asyncio.run(container.close())
     return elapsed / iterations

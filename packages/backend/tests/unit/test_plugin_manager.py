@@ -1,9 +1,11 @@
 """Unit tests for PluginManager discovery, installation, and error resilience."""
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
 from uuid import uuid4
+
 import pytest
 
 from forge.application.services.plugin_manager import PluginManager
@@ -49,6 +51,7 @@ def test_scaffold_and_load_plugin(tmp_path: object) -> None:  # type: ignore[ove
         assert task_res.outputs["result"] == "custom message"
 
     import asyncio
+
     asyncio.run(install_and_discover())
 
 
@@ -60,7 +63,7 @@ def test_load_malformed_plugin_manifest(tmp_path: object) -> None:  # type: igno
 
     plugin_dir = Path(tmp_path) / "bad-plugin"  # type: ignore[attr-defined]
     plugin_dir.mkdir()
-    
+
     # Write bad JSON
     with open(plugin_dir / "forge_plugin.json", "w") as f:
         f.write("{invalid-json}")
@@ -77,7 +80,7 @@ def test_load_missing_entrypoint_plugin(tmp_path: object) -> None:  # type: igno
 
     plugin_dir = Path(tmp_path) / "missing-entry-plugin"  # type: ignore[attr-defined]
     plugin_dir.mkdir()
-    
+
     manifest_data = {
         "name": "missing-entry-plugin",
         "version": "1.0.0",
@@ -90,6 +93,7 @@ def test_load_missing_entrypoint_plugin(tmp_path: object) -> None:  # type: igno
         json.dump(manifest_data, f)
 
     from forge.core.domain.models import PluginManifest
+
     manifest = PluginManifest(**manifest_data)
 
     with pytest.raises(PluginError) as exc:
