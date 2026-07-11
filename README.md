@@ -10,9 +10,7 @@ Forge is an open-source execution runtime that sits between AI models and extern
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-green.svg)](https://fastapi.tiangolo.com/)
 [![Pydantic v2](https://img.shields.io/badge/Pydantic-v2-E92063.svg)](https://docs.pydantic.dev/)
-[![Build Status](https://github.com/yourname/forge/actions/workflows/ci.yml/badge.svg)](https://github.com/yourname/forge/actions)
-[![Code Coverage](https://img.shields.io/badge/Coverage-98%25-green.svg)](https://github.com/yourname/forge)
-[![Overhead Benchmark](https://img.shields.io/badge/Benchmark-Overhead%20%3C%205ms-blue.svg)](benchmarks/results/benchmark.md)
+[![CI Build Status](https://github.com/aaryanrwt/forge/actions/workflows/ci.yml/badge.svg)](https://github.com/aaryanrwt/forge/actions/workflows/ci.yml)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](docs/CONTRIBUTING.md)
 
 </div>
@@ -179,7 +177,7 @@ Run Forge locally from source:
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/yourname/forge
+git clone https://github.com/aaryanrwt/forge
 cd forge
 
 # 2. Install Node and Python dependencies
